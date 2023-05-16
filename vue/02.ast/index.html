@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="app">
+            <div id="my">hello {{name}} <span>world</span></div>
+        </div>
+        <script src="dist/vue.js"></script>
+        <script>
+            let vm = new Vue({
+                el: '#app',
+                data() {
+                    return {
+                        a: [1, 2, 3],
+                        name: '123',
+                    }
+                },
+                // 渲染
+                // 1、先找render方法
+                // 2、默认没有传入render方法会查找template
+                // 3、找当前el指定的元素中的内容
+            })
+        </script>
+    </body>
+</html>
