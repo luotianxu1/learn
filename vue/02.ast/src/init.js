@@ -1,4 +1,5 @@
 import { compileToFunctions } from './compiler/index'
+import { mountComponent } from './lifecycle'
 import { initState } from './state'
 
 export function initMixin(Vue) {
@@ -15,12 +16,14 @@ export function initMixin(Vue) {
         }
     }
 
+    // 1、render 2、template 3、外部template
     Vue.prototype.$mount = function (el) {
         // 挂载操作
         const vm = this
         const options = vm.$options
         el = document.querySelector(el)
-        console.log(el)
+        vm.$el = el
+
         if (!options.render) {
             //没有render 将template转换成render方法
             let template = options.template
@@ -33,5 +36,8 @@ export function initMixin(Vue) {
         }
         // console.log(options.render) // 渲染时用的都是这个render方法
         // 有render方法
+
+        // 需要挂载这个组件
+        mountComponent(vm, el)
     }
 }

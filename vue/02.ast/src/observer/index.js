@@ -47,6 +47,7 @@ export function observe(data) {
     if (!isObject(data)) {
         return
     }
+    // 如果对象被观测过
     if (data.__ob__) {
         return
     }
