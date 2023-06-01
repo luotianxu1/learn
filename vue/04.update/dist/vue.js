@@ -429,6 +429,80 @@
     return render;
   }
 
+  var Dep = /*#__PURE__*/function () {
+    function Dep() {
+      _classCallCheck(this, Dep);
+      this.subs = []; // 用来存放watcher的
+    }
+    _createClass(Dep, [{
+      key: "depend",
+      value: function depend() {
+        if (Dep.target) {
+          this.subs.push(Dep.target);
+        }
+      }
+    }, {
+      key: "notify",
+      value: function notify() {
+        this.subs.forEach(function (watcher) {
+          return watcher.update();
+        });
+      }
+    }]);
+    return Dep;
+  }();
+  Dep.target = null;
+  function pushTarget(watcher) {
+    Dep.target = watcher;
+  }
+  function popTarget() {
+    Dep.target = null;
+  }
+
+  // 多对多的关系 一个属性有一个dep，dep是用来收集watcher的
+  // dep可以存多个watcher
+  // 1个watcher可以对应多个dep
+
+  var id = 0;
+  var Watcher = /*#__PURE__*/function () {
+    // vm实例
+    // exprOrFn vm._update(vm._render())
+    function Watcher(vm, exprOrFn, cb, options) {
+      _classCallCheck(this, Watcher);
+      this.vm = vm;
+      this.exprOrFn = exprOrFn;
+      this.cb = cb;
+      this.options = options;
+      this.id = id++; // watcher的唯一标识
+
+      if (typeof exprOrFn == 'function') {
+        this.getter = exprOrFn;
+      }
+      this.get(); // 默认会调用get方法
+    }
+    _createClass(Watcher, [{
+      key: "get",
+      value: function get() {
+        pushTarget(this); // 当前watcher实例
+        this.getter();
+        popTarget();
+      }
+    }, {
+      key: "update",
+      value: function update() {
+        this.get();
+      }
+    }]);
+    return Watcher;
+  }();
+
+  // 在数据劫持的时候给每个属性都增加了一个dep
+
+  // 1.x先把这个渲染watcher放到Dep.taeget属性上
+  // 2.开始渲染，取值会调用get方法，需要让这个属性的dep存储当前的watcher
+  // 3.页面上所需要的属性都会将这个watcher存在自己的dep中
+  // 4.属性更新就重新调用渲染逻辑，通知自己存储的watcher来更新
+
   // 将虚拟节点转换成真实节点
   // oldVnode => id#app
   // vnode 我们根据模板生成的虚拟dom
@@ -489,7 +563,13 @@
     // 调用render方法去渲染el属性
     // 先调用render方法创建虚拟节点，再将虚拟节点渲染到页面上
     callHook(vm, 'beforeMount');
-    vm._update(vm._render());
+    var updateComponent = function updateComponent() {
+      vm._update(vm._render());
+    };
+    // 这个watcher是用于渲染的，目前没有任何功能
+    new Watcher(vm, updateComponent, function () {
+      callHook(vm, 'beforeUpdate');
+    }, true);
     callHook(vm, 'mounted');
   }
   function callHook(vm, hook) {
@@ -564,19 +644,31 @@
   }();
   function defineReactive(data, key, value) {
     observe(value); // 本身用户默认值是对象套对象 需要递归处理
+
+    var dep = new Dep(); // 每个属性都有一个dep
+
+    // 当页面取值时，说明这个值渲染了，将这个watcher和这个属性对应起来
     Object.defineProperty(data, key, {
+      // 依赖收集
       get: function get() {
+        if (Dep.target) {
+          // 让属性记住这个watcher
+          dep.depend();
+        }
         console.log('用户获取值了');
         return value;
       },
+      // 依赖更新
       set: function set(newValue) {
         console.log('用户设置值了');
         if (newValue == value) return;
         observe(newValue); // 如果用户赋值一个新对象 ，需要将这个对象进行劫持
         value = newValue;
+        dep.notify(); // 告诉当前的属性存放的watcher执行
       }
     });
   }
+
   function observe(data) {
     // 如果是对象才观测
     if (!isObject(data)) {

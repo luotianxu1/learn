@@ -1,3 +1,4 @@
+import Watcher from './observer/watcher'
 import { patch } from './vdom/patch'
 
 export function lifecycleMixin(Vue) {
@@ -12,7 +13,20 @@ export function mountComponent(vm, el) {
     // 调用render方法去渲染el属性
     // 先调用render方法创建虚拟节点，再将虚拟节点渲染到页面上
     callHook(vm, 'beforeMount')
-    vm._update(vm._render())
+
+    let updateComponent = () => {
+        vm._update(vm._render())
+    }
+    // 这个watcher是用于渲染的，目前没有任何功能
+    new Watcher(
+        vm,
+        updateComponent,
+        () => {
+            callHook(vm, 'beforeUpdate')
+        },
+        true
+    )
+
     callHook(vm, 'mounted')
 }
 
