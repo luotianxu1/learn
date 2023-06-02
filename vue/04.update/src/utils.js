@@ -97,3 +97,49 @@ export function mergeOptions(parent, child) {
 
     return options
 }
+
+let callbacks = []
+let pending = false
+
+function flushCallbacks() {
+    callbacks.forEach((cb) => cb()) // 让nextTick中传入的方法依次执行
+    pending = false // 标识已经执行完毕
+    callbacks = []
+}
+
+function timer(flushCallbacks) {
+    let timerFn = () => {}
+    if (Promise) {
+        timerFn = () => {
+            Promise.resolve().then(flushCallbacks)
+        }
+    } else if (MutationObserver) {
+        let textNode = document.createTextNode(1)
+        let observe = new MutationObserver(flushCallbacks)
+        observe.observe(textNode, {
+            characterData: true,
+        })
+        timerFn = () => {
+            textNode.textContent = 3
+        }
+        // 微任务
+    } else if (setImmediate) {
+        timerFn = () => {
+            setImmediate(flushCallbacks)
+        }
+    } else {
+        timerFn = () => {
+            setTimeout(flushCallbacks)
+        }
+    }
+    timerFn()
+}
+
+export function nextTick(cb) {
+    // 因为内部会调用nextTick 用户也会调用，但是异步只需要一次
+    callbacks.push(cb)
+    if (!pending) {
+        timer(flushCallbacks) // 这个方法是异步方法 做了兼容处理
+        pending = true
+    }
+}

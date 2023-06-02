@@ -218,6 +218,50 @@
     }
     return options;
   }
+  var callbacks = [];
+  var pending$1 = false;
+  function flushCallbacks() {
+    callbacks.forEach(function (cb) {
+      return cb();
+    }); // 让nextTick中传入的方法依次执行
+    pending$1 = false; // 标识已经执行完毕
+    callbacks = [];
+  }
+  function timer(flushCallbacks) {
+    var timerFn = function timerFn() {};
+    if (Promise) {
+      timerFn = function timerFn() {
+        Promise.resolve().then(flushCallbacks);
+      };
+    } else if (MutationObserver) {
+      var textNode = document.createTextNode(1);
+      var observe = new MutationObserver(flushCallbacks);
+      observe.observe(textNode, {
+        characterData: true
+      });
+      timerFn = function timerFn() {
+        textNode.textContent = 3;
+      };
+      // 微任务
+    } else if (setImmediate) {
+      timerFn = function timerFn() {
+        setImmediate(flushCallbacks);
+      };
+    } else {
+      timerFn = function timerFn() {
+        setTimeout(flushCallbacks);
+      };
+    }
+    timerFn();
+  }
+  function nextTick(cb) {
+    // 因为内部会调用nextTick 用户也会调用，但是异步只需要一次
+    callbacks.push(cb);
+    if (!pending$1) {
+      timer(flushCallbacks); // 这个方法是异步方法 做了兼容处理
+      pending$1 = true;
+    }
+  }
 
   function initGlobalApi(Vue) {
     Vue.options = {}; // 用来存放全局的配置 , 每个组件初始化的时候都会和options选项进行合并
@@ -429,17 +473,22 @@
     return render;
   }
 
+  var id$1 = 0;
   var Dep = /*#__PURE__*/function () {
     function Dep() {
       _classCallCheck(this, Dep);
       this.subs = []; // 用来存放watcher的
+      this.id = id$1++;
     }
     _createClass(Dep, [{
       key: "depend",
       value: function depend() {
-        if (Dep.target) {
-          this.subs.push(Dep.target);
-        }
+        Dep.target.addDep(this); // 实现双向记忆，让watcher记住dep的同时，让dep也记住wathcer
+      }
+    }, {
+      key: "addSub",
+      value: function addSub(watcher) {
+        this.subs.push(watcher);
       }
     }, {
       key: "notify",
@@ -463,6 +512,32 @@
   // dep可以存多个watcher
   // 1个watcher可以对应多个dep
 
+  var queue = []; // 将需要批量更新的watcher存到一个队列中，稍后让watcher执行
+  var has = {};
+  var pending = false;
+  function flushSchedulerQueue() {
+    queue.forEach(function (watcher) {
+      watcher.run();
+      watcher.cb();
+    });
+    queue = []; // 清空watcher队列
+    has = {}; // 清空标识id
+    pending = false;
+  }
+  function queueWatcher(watcher) {
+    var id = watcher.id;
+    if (has[id] == null) {
+      queue.push(watcher); // 将watcher存到队列中
+      has[id] = true;
+      if (!pending) {
+        //如果还没清空队列，就不要再开定时器
+        // 等待所有同步代码执行完毕后再执行
+        nextTick(flushSchedulerQueue);
+        pending = true;
+      }
+    }
+  }
+
   var id = 0;
   var Watcher = /*#__PURE__*/function () {
     // vm实例
@@ -474,13 +549,24 @@
       this.cb = cb;
       this.options = options;
       this.id = id++; // watcher的唯一标识
-
+      this.deps = []; //记录有多少dep依赖它
+      this.depsId = new Set();
       if (typeof exprOrFn == 'function') {
         this.getter = exprOrFn;
       }
       this.get(); // 默认会调用get方法
     }
     _createClass(Watcher, [{
+      key: "addDep",
+      value: function addDep(dep) {
+        var id = dep.id;
+        if (!this.depsId.has(id)) {
+          this.deps.push(dep);
+          this.depsId.add(id);
+          dep.addSub(this);
+        }
+      }
+    }, {
       key: "get",
       value: function get() {
         pushTarget(this); // 当前watcher实例
@@ -488,9 +574,15 @@
         popTarget();
       }
     }, {
+      key: "run",
+      value: function run() {
+        this.get();
+      }
+    }, {
       key: "update",
       value: function update() {
-        this.get();
+        // 这里不要每次都调用get方法 get方法会重新渲染页面
+        queueWatcher(this);
       }
     }]);
     return Watcher;
@@ -568,7 +660,7 @@
     };
     // 这个watcher是用于渲染的，目前没有任何功能
     new Watcher(vm, updateComponent, function () {
-      callHook(vm, 'beforeUpdate');
+      callHook(vm, 'updated');
     }, true);
     callHook(vm, 'mounted');
   }
@@ -592,6 +684,7 @@
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
       }
+      // 我们要知道数组对应哪个dep
       //  args 是参数列表 arr.push(1,2,3)
       (_oldArrayPrototype$me = oldArrayPrototype[method]).call.apply(_oldArrayPrototype$me, [this].concat(args));
       var inserted;
@@ -606,12 +699,14 @@
       }
       // 如果有新增的内容要进行继续劫持, 我需要观测的数组里的每一项，而不是数组
       if (inserted) ob.observeArray(inserted);
+      ob.dep.notify();
     };
   });
 
   var Observer = /*#__PURE__*/function () {
     function Observer(data) {
       _classCallCheck(this, Observer);
+      this.dep = new Dep(); // 数据可能是数组或者对象
       // 判断一个对象是否被观测过，看他有没有__ob__这个属性
       defineProperty(data, '__ob__', this);
 
@@ -643,7 +738,7 @@
     return Observer;
   }();
   function defineReactive(data, key, value) {
-    observe(value); // 本身用户默认值是对象套对象 需要递归处理
+    var childDep = observe(value); // 获取到数组对应的dep
 
     var dep = new Dep(); // 每个属性都有一个dep
 
@@ -654,7 +749,12 @@
         if (Dep.target) {
           // 让属性记住这个watcher
           dep.depend();
+          if (childDep) {
+            // 默认给数组增加了一个dep属性，当对数组这个对象取值的时候
+            childDep.dep.depend(); // 数组存起来了这个渲染watcher
+          }
         }
+
         console.log('用户获取值了');
         return value;
       },
@@ -702,6 +802,11 @@
 
     // 数据劫持
     observe(vm._data);
+  }
+  function stateMixin(Vue) {
+    Vue.prototype.$nextTick = function (cb) {
+      nextTick(cb);
+    };
   }
 
   function initMixin(Vue) {
@@ -798,6 +903,7 @@
   lifecycleMixin(Vue);
   // _render
   renderMixin(Vue);
+  stateMixin(Vue);
   initGlobalApi(Vue);
 
   return Vue;

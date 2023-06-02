@@ -1,6 +1,7 @@
 import { initGlobalApi } from './global-api/index'
 import { initMixin } from './init'
 import { lifecycleMixin } from './lifecycle'
+import { stateMixin } from './state'
 import { renderMixin } from './vdom/index'
 
 function Vue(options) {
@@ -13,6 +14,7 @@ initMixin(Vue)
 lifecycleMixin(Vue)
 // _render
 renderMixin(Vue)
+stateMixin(Vue)
 
 initGlobalApi(Vue)
 
