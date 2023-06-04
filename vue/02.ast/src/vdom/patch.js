@@ -39,7 +39,7 @@ function updateProperties(vnode) {
                 el.style[styleName] = newProps.style[styleName]
             }
         } else if (key == 'class') {
-            el.className = el.class
+            el.className = newProps.class
         } else {
             el.setAttribute(key, newProps[key])
         }
