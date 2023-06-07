@@ -979,7 +979,9 @@
     if (opts.data) {
       initData(vm);
     }
-    if (opts.computed) ;
+    if (opts.computed) {
+      initComputed(vm);
+    }
     if (opts.watch) {
       initWatch(vm);
     }
@@ -995,6 +997,32 @@
 
     // 数据劫持
     observe(vm._data);
+  }
+  function initComputed(vm) {
+    var computed = vm.$options.computed;
+    vm._computedWatchers = {}; // 稍后存放计算属性的
+    for (var key in computed) {
+      var userDef = computed[key]; // 取出对应的值
+      // 获取get方法
+      typeof userDef == 'function' ? userDef : userDef.get; // watcher使用
+
+      definecomputed(vm, key, userDef);
+    }
+  }
+  var sharePropertyDefinition = {
+    enumerable: true,
+    configurable: true,
+    get: function get() {},
+    set: function set() {}
+  };
+  function definecomputed(target, key, userDef) {
+    if (typeof userDef == 'function') {
+      sharePropertyDefinition.get = userDef;
+    } else {
+      sharePropertyDefinition.get = userDef.get; // 需要加缓存
+      sharePropertyDefinition.set = userDef.set;
+    }
+    Object.defineProperty(target, key, sharePropertyDefinition);
   }
   function initWatch(vm) {
     var watch = vm.$options.watch;
