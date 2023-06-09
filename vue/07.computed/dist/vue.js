@@ -501,11 +501,13 @@
     return Dep;
   }();
   Dep.target = null;
+  var stack = [];
   function pushTarget(watcher) {
     Dep.target = watcher;
+    stack.push(watcher);
   }
   function popTarget() {
-    Dep.target = null;
+    Dep.target = stack[stack.length - 1];
   }
 
   // 多对多的关系 一个属性有一个dep，dep是用来收集watcher的
@@ -551,7 +553,9 @@
       this.cb = cb;
       this.options = options;
       this.isWatcher = typeof options == 'boolean'; // 是否为渲染watcher
-      this.user = options.user; // 是否为用户watcher
+      this.user = !!options.user; // 是否为用户watcher
+      this.lazy = !!options.lazy; // 如果watcher上有lazy属性 说明是一个计算属性
+      this.dirty = options.lazy; // dirty代表取值时是否执行用户提供的方法
       this.id = id++; // watcher的唯一标识
       this.deps = []; //记录有多少dep依赖它
       this.depsId = new Set();
@@ -571,7 +575,7 @@
         };
       }
       // 默认会先调用一次get方法，进行取值，将结果保留下来
-      this.value = this.get(); // 默认会调用get方法
+      this.value = this.lazy ? void 0 : this.get(); // 默认会调用get方法
     }
     _createClass(Watcher, [{
       key: "addDep",
@@ -587,7 +591,7 @@
       key: "get",
       value: function get() {
         pushTarget(this); // 当前watcher实例
-        var result = this.getter(); // 调用exporOrFn 渲染页面 取值（执行了get方法）
+        var result = this.getter.call(this.vm); // 调用exporOrFn 渲染页面 取值（执行了get方法）
         this.getter();
         popTarget();
         return result;
@@ -605,8 +609,27 @@
     }, {
       key: "update",
       value: function update() {
-        // 这里不要每次都调用get方法 get方法会重新渲染页面
-        queueWatcher(this);
+        if (this.lazy) {
+          // 是计算属性
+          this.dirty = true;
+        } else {
+          // 这里不要每次都调用get方法 get方法会重新渲染页面
+          queueWatcher(this);
+        }
+      }
+    }, {
+      key: "evaluate",
+      value: function evaluate() {
+        this.dirty = false; // 　取过一次值之后就表示已经取过值了
+        this.value = this.get();
+      }
+    }, {
+      key: "depend",
+      value: function depend() {
+        var i = this.deps.length;
+        while (i--) {
+          this.deps[i].depend(); // 让depend存储渲染watcher
+        }
       }
     }]);
     return Watcher;
@@ -1000,12 +1023,15 @@
   }
   function initComputed(vm) {
     var computed = vm.$options.computed;
-    vm._computedWatchers = {}; // 稍后存放计算属性的
+    var watchers = vm._computedWatchers = {}; // 稍后存放计算属性的
     for (var key in computed) {
       var userDef = computed[key]; // 取出对应的值
       // 获取get方法
-      typeof userDef == 'function' ? userDef : userDef.get; // watcher使用
+      var getter = typeof userDef == 'function' ? userDef : userDef.get; // watcher使用
 
+      watchers[key] = new Watcher(vm, getter, function () {}, {
+        lazy: true
+      });
       definecomputed(vm, key, userDef);
     }
   }
@@ -1017,13 +1043,31 @@
   };
   function definecomputed(target, key, userDef) {
     if (typeof userDef == 'function') {
-      sharePropertyDefinition.get = userDef;
+      sharePropertyDefinition.get = createComputedGetter(key);
     } else {
-      sharePropertyDefinition.get = userDef.get; // 需要加缓存
+      sharePropertyDefinition.get = createComputedGetter(key); // 需要加缓存
       sharePropertyDefinition.set = userDef.set;
     }
     Object.defineProperty(target, key, sharePropertyDefinition);
   }
+  function createComputedGetter(key) {
+    // 此方法是我们包装的方法 每次取值会调用此方法
+    return function computedGetter() {
+      var watcher = this._computedWatchers[key]; //拿到属性对应的watcher
+      if (watcher) {
+        // 判断到底要不要执行用户传递的方法
+        if (watcher.dirty) {
+          watcher.evaluate(); // 对当前的watcher求值
+        }
+
+        if (Dep.target) {
+          watcher.depend();
+        }
+        return watcher.value; // 默认返回watcher上
+      }
+    };
+  }
+
   function initWatch(vm) {
     var watch = vm.$options.watch;
     var _loop = function _loop(key) {

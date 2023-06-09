@@ -1,6 +1,7 @@
 import { observe } from './observer/index'
 import { isFunction, nextTick, proxy } from './utils'
 import Watcher from './observer/watcher'
+import Dep from './observer/dep'
 
 export function initState(vm) {
     const opts = vm.$options
@@ -43,6 +44,7 @@ function initComputed(vm) {
         // 获取get方法
         const getter = typeof userDef == 'function' ? userDef : userDef.get // watcher使用
 
+        watchers[key] = new Watcher(vm, getter, () => {}, { lazy: true })
         definecomputed(vm, key, userDef)
     }
 }
@@ -54,13 +56,31 @@ const sharePropertyDefinition = {
 }
 function definecomputed(target, key, userDef) {
     if (typeof userDef == 'function') {
-        sharePropertyDefinition.get = userDef
+        sharePropertyDefinition.get = createComputedGetter(key)
     } else {
-        sharePropertyDefinition.get = userDef.get // 需要加缓存
+        sharePropertyDefinition.get = createComputedGetter(key) // 需要加缓存
         sharePropertyDefinition.set = userDef.set
     }
     Object.defineProperty(target, key, sharePropertyDefinition)
 }
+
+function createComputedGetter(key) {
+    // 此方法是我们包装的方法 每次取值会调用此方法
+    return function computedGetter() {
+        const watcher = this._computedWatchers[key] //拿到属性对应的watcher
+        if (watcher) {
+            // 判断到底要不要执行用户传递的方法
+            if (watcher.dirty) {
+                watcher.evaluate() // 对当前的watcher求值
+            }
+            if (Dep.target) {
+                watcher.depend()
+            }
+            return watcher.value // 默认返回watcher上
+        }
+    }
+}
+
 function initWatch(vm) {
     let watch = vm.$options.watch
     for (let key in watch) {

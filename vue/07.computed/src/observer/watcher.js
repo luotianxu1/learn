@@ -11,7 +11,9 @@ class Watcher {
         this.cb = cb
         this.options = options
         this.isWatcher = typeof options == 'boolean' // 是否为渲染watcher
-        this.user = options.user // 是否为用户watcher
+        this.user = !!options.user // 是否为用户watcher
+        this.lazy = !!options.lazy // 如果watcher上有lazy属性 说明是一个计算属性
+        this.dirty = options.lazy // dirty代表取值时是否执行用户提供的方法
         this.id = id++ // watcher的唯一标识
         this.deps = [] //记录有多少dep依赖它
         this.depsId = new Set()
@@ -32,7 +34,7 @@ class Watcher {
             }
         }
         // 默认会先调用一次get方法，进行取值，将结果保留下来
-        this.value = this.get() // 默认会调用get方法
+        this.value = this.lazy ? void 0 : this.get() // 默认会调用get方法
     }
     addDep(dep) {
         let id = dep.id
@@ -44,7 +46,7 @@ class Watcher {
     }
     get() {
         pushTarget(this) // 当前watcher实例
-        let result = this.getter() // 调用exporOrFn 渲染页面 取值（执行了get方法）
+        let result = this.getter.call(this.vm) // 调用exporOrFn 渲染页面 取值（执行了get方法）
         this.getter()
         popTarget()
         return result
@@ -58,8 +60,23 @@ class Watcher {
         }
     }
     update() {
-        // 这里不要每次都调用get方法 get方法会重新渲染页面
-        queueWatcher(this)
+        if (this.lazy) {
+            // 是计算属性
+            this.dirty = true
+        } else {
+            // 这里不要每次都调用get方法 get方法会重新渲染页面
+            queueWatcher(this)
+        }
+    }
+    evaluate() {
+        this.dirty = false // 　取过一次值之后就表示已经取过值了
+        this.value = this.get()
+    }
+    depend() {
+        let i = this.deps.length
+        while (i--) {
+            this.deps[i].depend() // 让depend存储渲染watcher
+        }
     }
 }
 
