@@ -80,7 +80,7 @@ export function lifecycleMixin(Vue: Class < Component > ) {
             vm.$el.__vue__ = vm
         }
 
-    
+
 
         // if parent is an HOC, update its $el as well
         if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
@@ -141,6 +141,7 @@ export function lifecycleMixin(Vue: Class < Component > ) {
     }
 }
 
+// 组件挂载
 export function mountComponent(
     vm: Component,
     el: ? Element,
@@ -148,27 +149,7 @@ export function mountComponent(
 ): Component {
     vm.$el = el
     if (!vm.$options.render) { // 如果没render函数
-        vm.$options.render = createEmptyVNode
-        if (process.env.NODE_ENV !== 'production') {
-            /* istanbul ignore if */
-            if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
-                vm.$options.el || el) {
-                warn(
-                    // 如果你没写render 但是写了template. 用的是运行时
-                    // 不要用template ， 可以使用工程化的方式 通过vue-loader转化模板
-                    // 你用个带compiler的
-                    'You are using the runtime-only build of Vue where the template ' +
-                    'compiler is not available. Either pre-compile the templates into ' +
-                    'render functions, or use the compiler-included build.',
-                    vm
-                )
-            } else {
-                warn(
-                    'Failed to mount component: template or render function not defined.',
-                    vm
-                )
-            }
-        }
+        vm.$options.render = createEmptyVNode // 创建一个空的虚拟节点
     }
     callHook(vm, 'beforeMount') // 进行挂载
 

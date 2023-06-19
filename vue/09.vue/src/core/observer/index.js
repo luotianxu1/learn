@@ -114,8 +114,9 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
     return
   }
   let ob: Observer | void
+  // 被观测过了
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
-    ob = value.__ob__
+    ob = value.__ob__ // 返回被观测到数据
   } else if (
     shouldObserve &&
     !isServerRendering() &&

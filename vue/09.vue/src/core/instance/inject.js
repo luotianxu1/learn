@@ -19,8 +19,8 @@ export function initProvide (vm: Component) {
       : provide
   }
 }
-// C组件
-export function initInjections (vm: Component) {  
+// 不停的向上查找_provide属性，知道找到为止
+export function initInjections (vm: Component) {
   inject:['a']
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {

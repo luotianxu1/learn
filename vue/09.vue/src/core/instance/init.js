@@ -19,17 +19,11 @@ export function initMixin (Vue: Class<Component>) {
     vm._uid = uid++ // _uid 是唯一的标识 可以用于作为key
 
     let startTag, endTag
-    /* istanbul ignore if */
-    if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
-      startTag = `vue-perf-start:${vm._uid}`
-      endTag = `vue-perf-end:${vm._uid}`
-      mark(startTag)
-    }
 
     // a flag to avoid this being observed
-    vm._isVue = true // vue的实例不能观测
+    vm._isVue = true // vue的实例不能观测   标识vue的实例
     // merge options
-    if (options && options._isComponent) { // 如果是组件，需要对组件的属性 事件 
+    if (options && options._isComponent) { // 如果是组件，需要对组件的属性 事件的合并
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
@@ -41,14 +35,14 @@ export function initMixin (Vue: Class<Component>) {
         vm
       )
     }
-    // expose real self 
+    // expose real self
     vm._self = vm
-    initLifecycle(vm) // 初始化组件的父子关系 $parent $children 实现原理
+    initLifecycle(vm) // 初始化组件的父子关系 $parent $children 实现原理 组件生命周期
     initRender(vm) // 初始化插槽 _c  $attrs $listeners
     callHook(vm, 'beforeCreate') // beforeCreate
     initInjections(vm) // resolve injections before data/props   inject/provide  隔代传递数据 context 不建议开发时使用，因为同样数据来源混轮
-    initState(vm)
-    initProvide(vm) // resolve provide after data/props  
+    initState(vm) // 状态初始化 响应式核心
+    initProvide(vm) // resolve provide after data/props
     callHook(vm, 'created') // created
 
 

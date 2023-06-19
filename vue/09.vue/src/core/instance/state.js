@@ -57,6 +57,7 @@ export function initState (vm: Component) {
   } else {
     observe(vm._data = {}, true /* asRootData */)
   }
+  // 计算属性和watch
   if (opts.computed) initComputed(vm, opts.computed)
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch)
@@ -72,36 +73,15 @@ function initProps (vm: Component, propsOptions: Object) {
   const keys = vm.$options._propKeys = []
   const isRoot = !vm.$parent
   // root instance props should be converted
-  if (!isRoot) { // 属性传递 从父 props数据 -》 子 -》 孙子
-    toggleObserving(false)
+  if (!isRoot) { // 属性传递 从父 props数据 -》 子 -》 孙子 跟组件的属性是响应式的
+    toggleObserving(false) // 跟组件的属性需要时响应式的 你会把这个数据传递给自组件 子组件使用的时候不用再次做成响应式的
   }
   for (const key in propsOptions) {
-    keys.push(key)                  a=1      {a:{type:string}}
+    keys.push(key)
+    // 校验传入的属性是否合法
     const value = validateProp(key, propsOptions, propsData, vm)
-    /* istanbul ignore else */
-    if (process.env.NODE_ENV !== 'production') {
-      const hyphenatedKey = hyphenate(key)
-      if (isReservedAttribute(hyphenatedKey) ||
-          config.isReservedAttr(hyphenatedKey)) {
-        warn(
-          `"${hyphenatedKey}" is a reserved attribute and cannot be used as component prop.`,
-          vm
-        )
-      }
-      defineReactive(props, key, value, () => {
-        if (!isRoot && !isUpdatingChildComponent) {
-          warn(
-            `Avoid mutating a prop directly since the value will be ` +
-            `overwritten whenever the parent component re-renders. ` +
-            `Instead, use a data or computed property based on the prop's ` +
-            `value. Prop being mutated: "${key}"`,
-            vm
-          )
-        }
-      })
-    } else {
-      defineReactive(props, key, value)
-    }
+
+    defineReactive(props, key, value)
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
@@ -132,14 +112,6 @@ function initData (vm: Component) {
   let i = keys.length
   while (i--) {
     const key = keys[i]
-    if (process.env.NODE_ENV !== 'production') {
-      if (methods && hasOwn(methods, key)) {
-        warn(
-          `Method "${key}" has already been defined as a data property.`,
-          vm
-        )
-      }
-    }
     if (props && hasOwn(props, key)) {
       process.env.NODE_ENV !== 'production' && warn(
         `The data property "${key}" is already declared as a prop. ` +
@@ -265,27 +237,8 @@ function createGetterInvoker(fn) {
 function initMethods (vm: Component, methods: Object) {
   const props = vm.$options.props
   for (const key in methods) {
-    if (process.env.NODE_ENV !== 'production') {
-      if (typeof methods[key] !== 'function') {
-        warn(
-          `Method "${key}" has type "${typeof methods[key]}" in the component definition. ` +
-          `Did you reference the function correctly?`,
-          vm
-        )
-      }
-      if (props && hasOwn(props, key)) {
-        warn(
-          `Method "${key}" has already been defined as a prop.`,
-          vm
-        )
-      }
-      if ((key in vm) && isReserved(key)) {
-        warn(
-          `Method "${key}" conflicts with an existing Vue instance method. ` +
-          `Avoid defining component methods that start with _ or $.`
-        )
-      }
-    }
+    // 当前vue实例中的方法 this被绑定死了 就是当前组件的实例，用户也不能更改this的指向
+    // 使用时不能二次绑定 二次绑定无效
     vm[key] = typeof methods[key] !== 'function' ? noop : bind(methods[key], vm)
   }
 }
@@ -342,7 +295,7 @@ export function stateMixin (Vue: Class<Component>) {
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 
-  Vue.prototype.$set = set // Vue.set 
+  Vue.prototype.$set = set // Vue.set
   Vue.prototype.$delete = del // Vue.delete
 
   Vue.prototype.$watch = function ( // $watch
