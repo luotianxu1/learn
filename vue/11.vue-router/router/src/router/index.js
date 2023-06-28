@@ -7,26 +7,37 @@ import B from '../view/b.vue'
 
 Vue.use(VueRouter) // 注册两个全局组件  install(Vue)
 
-export default new VueRouter({
+const routes = [
+    {
+        path: '/',
+        component: Home,
+    },
+    {
+        path: '/about',
+        component: About,
+        children: [
+            {
+                path: 'a',
+                component: A,
+            },
+            {
+                path: 'b',
+                component: B,
+            },
+        ],
+    },
+]
+
+const router = new VueRouter({
     mode: 'hash',
-    routes: [
-        {
-            path: '/',
-            component: Home,
-        },
-        {
-            path: '/about',
-            component: About,
-            children: [
-                {
-                    path: 'a',
-                    component: A,
-                },
-                {
-                    path: 'b',
-                    component: B,
-                },
-            ],
-        },
-    ],
+    routes: routes,
 })
+
+router.matcher.addRoutes([
+    {
+        path: '/auth',
+        component: A,
+    },
+])
+
+export default router

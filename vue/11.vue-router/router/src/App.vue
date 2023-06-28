@@ -15,7 +15,7 @@ export default {
         return {}
     },
     mounted() {
-        console.log(this._routerRoot._router)
+        // console.log(this._routerRoot._router)
     },
 }
 </script>
