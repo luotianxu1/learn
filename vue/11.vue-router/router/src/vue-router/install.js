@@ -14,6 +14,12 @@ export default function install(_Vue, optinos) {
                 this._router = this.$options.router
 
                 this._router.init(this) // 这里的this就是根实例
+
+                Vue.util.defineReactive(
+                    this,
+                    '_route',
+                    this._router.history.current
+                )
             } else {
                 // 子 孙子
                 // 组件渲染是一层一层渲染
@@ -28,6 +34,12 @@ export default function install(_Vue, optinos) {
     Vue.component('router-link', RouterLink)
     Vue.component('router-view', RouterView)
 
-    Vue.prototype.$route = {}
+    // 代表路由中所有属性
+    Object.defineProperty(Vue.prototype, '$router', {
+        // 方法
+        get() {
+            return this._routerRoot._router
+        },
+    })
     Vue.prototype.$router = {}
 }

@@ -23,8 +23,10 @@ class VueRouter {
                 this.history = new BrowserHistory(this)
                 break
         }
+    }
 
-        console.log(this.history)
+    match(location) {
+        return this.matcher.match(location)
     }
 
     // 初始化
@@ -40,6 +42,12 @@ class VueRouter {
          * history.getCurrentLocation() // 获取当前的位置
          */
         history.transitionTo(history.getCurrentLocation(), setUpHashListener)
+
+        history.listen((route) => {
+            // 监听 监听如果current变化了 就重新的给 _route赋值
+            app._route = route
+            console.log(app._route)
+        })
     }
 }
 
