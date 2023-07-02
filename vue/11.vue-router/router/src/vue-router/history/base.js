@@ -14,6 +14,15 @@ export function createRoute(record, location) {
     }
 }
 
+function runQueue(queue, iterator, cb) {
+    function step(index) {
+        if (index >= queue.length) return cb()
+        let hook = queue[index]
+        iterator(hook, () => step(index + 1)) // 第二个参数什么时候调用就走下一次的
+    }
+    step(0)
+}
+
 class History {
     constructor(router) {
         this.router = router
@@ -39,10 +48,19 @@ class History {
             return
         }
 
-        this.updateRoute(route)
+        // 在更新之前先调用注册好的导航守卫
+        let queue = this.router.beforeHooks
 
-        // 根据路径加载不同的组件
-        onComplete && onComplete()
+        const iterator = (hook, next) => {
+            // 此迭代函数可以拿到对应的hook
+            hook(route, this.current, next)
+        }
+
+        runQueue(queue, iterator, () => {
+            this.updateRoute(route)
+            // 根据路径加载不同的组件
+            onComplete && onComplete()
+        })
     }
 
     updateRoute(route) {

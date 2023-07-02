@@ -23,10 +23,15 @@ class VueRouter {
                 this.history = new BrowserHistory(this)
                 break
         }
+        this.beforeHooks = []
     }
 
     match(location) {
         return this.matcher.match(location)
+    }
+
+    push(to) {
+        this.history.push(to)
     }
 
     // 初始化
@@ -48,6 +53,10 @@ class VueRouter {
             app._route = route
             console.log(app._route)
         })
+    }
+
+    beforeEach(fn) {
+        this.beforeHooks.push(fn)
     }
 }
 

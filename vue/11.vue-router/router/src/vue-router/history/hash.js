@@ -22,6 +22,12 @@ class HashHistory extends History {
         return getHash()
     }
 
+    push(location) {
+        this.transitionTo(location, () => {
+            window.location.hash = location
+        })
+    }
+
     setUpListener() {
         window.addEventListener('hashchange', () => {
             // 当hash值变化了 再次拿到hash值进行跳转

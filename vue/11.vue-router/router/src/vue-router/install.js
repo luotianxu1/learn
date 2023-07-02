@@ -41,5 +41,10 @@ export default function install(_Vue, optinos) {
             return this._routerRoot._router
         },
     })
-    Vue.prototype.$router = {}
+    Object.defineProperty(Vue.prototype, '$route', {
+        // 属性
+        get() {
+            return this._routerRoot._route
+        },
+    })
 }

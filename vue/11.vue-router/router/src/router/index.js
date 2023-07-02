@@ -40,4 +40,17 @@ router.matcher.addRoutes([
     },
 ])
 
+// 导航被触发
+// 在失活的组件里调用beforeRouteLeava守卫
+// 调用全局的beforeEach
+// 在重用的组件里调用beforeRouteUpdate守卫
+// 在路有配置里调用beforeEnter
+// 解析异步路有组件
+// 在被激活的组件里调用beforeRouteEnter
+// 调用全局的beforeResolve守卫
+// 导航被确认
+// 调用全局的afterEach钩子
+// 触发Dom更新
+// 调用beforeRouteEnter守卫中传给next的回调函数，创建好的组件实例会作为回调函数的参数传入
+
 export default router
