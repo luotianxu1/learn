@@ -4,6 +4,8 @@ import Vue from 'vue'
 // 2、Vuex中有一个Store类
 // 3、混入到组件中 增添store属性
 import Vuex from '@/vuex'
+import a from './a'
+import b from './b'
 
 Vue.use(Vuex)
 
@@ -27,6 +29,10 @@ const store = new Vuex.Store({
                 commit('changeAge', payload)
             }, 1000)
         },
+    },
+    modules: {
+        a,
+        b,
     },
 })
 
