@@ -5,6 +5,12 @@ import ModuleCollection from './module/module-collection'
 
 export let Vue
 
+function getNewState(store, path) {
+    return path.reduce((memo, current) => {
+        return memo[current]
+    }, store.state)
+}
+
 /**
  *
  * @param {*} store 容器
@@ -13,27 +19,65 @@ export let Vue
  * @param {*} module 格式化后的结果
  */
 const installModule = (store, rootStore, path, module) => {
+    // 获取moduleCollection类的实例
+    let ns = store._modules.getNamespace(path)
+
+    if (path.length > 0) {
+        // 儿子模块
+        // 需要找到对应父模块，将状态声明上去
+        // {name:'zf',age:'12',a:aState}
+        let parent = path.slice(0, -1).reduce((memo, current) => {
+            return memo[current]
+        }, rootStore)
+        // 对象新增属性不能导致重新更新视图
+        Vue.set(parent, path[path.length - 1], module.state)
+    }
+
     // 这里要对当前模块进行操作
     module.forEachMutation((mutation, key) => {
-        store._mutations[key] = store._mutations[key] || []
-        store._mutations[key].push((payload) => {
-            mutation.call(store, module.state, payload)
+        store._mutations[ns + key] = store._mutations[ns + key] || []
+        store._mutations[ns + key].push((payload) => {
+            mutation.call(store, getNewState(store, path), payload)
+            store._subscribes.forEach((fn) =>
+                fn({ type: ns + key, payload }, store.state)
+            )
         })
     })
     module.forEachAction((action, key) => {
-        store._actions[key] = store._actions[key] || []
-        store._actions[key].push((payload) => {
+        store._actions[ns + key] = store._actions[ns + key] || []
+        store._actions[ns + key].push((payload) => {
             action.call(store, store, payload)
         })
     })
     module.forEachGetter((getter, key) => {
         // 模块中getter的名字重复来会覆盖
-        store._wrappedGetters[key] = function () {
-            return getter(module.state)
+        store._wrappedGetters[ns + key] = function () {
+            return getter(getNewState(store, path))
         }
     })
     module.forEachChild((child, key) => {
         installModule(store, rootStore, path.concat(key), child)
+    })
+}
+
+function resetStoreVM(store, state) {
+    store.getters = {}
+    const computed = {}
+    forEachVal(store._wrappedGetters, (fn, key) => {
+        computed[key] = () => {
+            return fn()
+        }
+        Object.defineProperty(store.getters, key, {
+            get: () => {
+                store._vm[key]
+            },
+        })
+    })
+    store._vm = new Vue({
+        data: {
+            $$state: state,
+        },
+        computed,
     })
 }
 
@@ -45,60 +89,51 @@ export class Store {
         this._mutations = {}
         this._actions = {}
         this._wrappedGetters = {}
+        this._subscribes = []
+        this._committing = false // 默认不是在mutation中更改的
 
         // 1、模块收集
         this._modules = new ModuleCollection(options)
 
+        // 安装模块
         installModule(this, state, [], this._modules.root)
 
-        // 1、添加状态逻辑
-        // const computed = {}
+        resetStoreVM(this, state)
 
-        // 2、处理getters 具有缓存的
-        // this.getters = {}
-        // forEachVal(options.getters, (fn, key) => {
-        //     // 将用户的getters定义在实例上
-        //     computed[key] = () => {
-        //         return fn(this.state)
-        //     }
-        //     // 当我取值时执行计算属性的逻辑
-        //     Object.defineProperty(this.getters, key, {
-        //         get: () => this._vm[key],
-        //     })
-        // })
+        if (options.plugins) {
+            // 说明用户使用了插件
+            options.plugins.forEach((plugin) => plugin(this))
+        }
+    }
 
-        // 3、计算属性的实现
-        // this._vm = new Vue({
-        //     // 属性如果是通过$开头都 默认不会将这个属性挂载到vm上
-        //     data: {
-        //         $$state: state, // 会将$$state对应的对象都通过defineProperty来进行属性劫持
-        //     },
-        //     computed,
-        // })
+    _withCommittting(fn) {
+        this._committing = true // 如果true
+        fn() // 函数是同步的 获取_commiting 就是true,如果是异步的那么就会变成false 就会打印日志
+        this._committing = false
+    }
 
-        // 4、mutations
-        // this.mutations = {}
+    subscribe(fn) {
+        this._subscribes.push(fn)
+    }
 
-        // forEachVal(options.mutations, (fn, key) => {
-        //     this.mutations[key] = (payload) => fn(this.state, payload)
-        // })
-
-        // 5、actions
-        // this.actions = {}
-        // forEachVal(options.actions, (fn, key) => {
-        //     this.actions[key] = (payload) => fn(this, payload)
-        // })
+    replaceState(newState) {
+        // 需要替换的状态
+        this._withCommittting(() => {
+            this._vm._data.$$state = newState // 替换最新的状态， 赋予对象类型会被重新劫持
+        })
+        // 虽然替换了状态，但是mutation getter中的state在初始化的时候 已经被绑定死了老的状态
     }
 
     // 在严格模式下mutations和actions是有区别的
     // 保证当前this指向当前实例
     commit = (type, payload) => {
         // 调用commit 就是去找刚才绑定好的mutations
-        this.mutations[type](payload)
+        this._mutations[type] &&
+            this._mutations[type].forEach((fn) => fn(payload))
     }
 
     dispatch = (type, payload) => {
-        this.actions[type](payload)
+        this._actions[type] && this._actions[type].forEach((fn) => fn(payload))
     }
 
     // 属性访问器

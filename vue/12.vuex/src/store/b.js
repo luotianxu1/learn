@@ -4,10 +4,16 @@ export default {
         age: 333,
     },
     getters: {},
-    actions: {},
     mutations: {
         changeAge(state, payload) {
             state.age += payload
+        },
+    },
+    actions: {
+        changeAge({ commit, dispatch }, payload) {
+            setTimeout(() => {
+                commit('b/changeAge', payload)
+            }, 1000)
         },
     },
 }

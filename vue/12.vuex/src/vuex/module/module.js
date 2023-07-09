@@ -36,6 +36,12 @@ class Module {
     forEachChild(fn) {
         forEachVal(this._children, fn)
     }
+
+    // 用于标识他自己是否写了namesapced
+    get namespaced() {
+        // module.namespaced
+        return !!this._raw.namespaced
+    }
 }
 
 export default Module

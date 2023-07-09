@@ -6,6 +6,19 @@ class ModuleCollection {
         this.register([], options) // 栈 stack[根对象，a,c]
     }
 
+    getNamespace(path) {
+        // [a,b,c]
+        // 返回一个字符串 a/b/c   ''
+        let root = this.root
+        let ns = path.reduce((ns, key) => {
+            // this.root.c.namespace
+            let module = root.getChild(key)
+            root = module
+            return module.namespaced ? ns + key + '/' : ns
+        }, '')
+        return ns
+    }
+
     register(path, rootModule) {
         let newModule = new Module(rootModule)
         if (path.length == 0) {
