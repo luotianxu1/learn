@@ -6,7 +6,7 @@ export function getList() {
 
 export function getData() {
     return new Promise((resolve, reject) => {
-        resolve('香蕉')
+        resolve(['香蕉'])
     })
 }
 

@@ -9,5 +9,5 @@ export function getData() {
 }
 
 export function getUrl() {
-    return axios({ url: '/data' })
+    return axios({ url: '/url' })
 }

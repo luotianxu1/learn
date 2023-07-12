@@ -4,7 +4,8 @@
     "description": "",
     "main": "1.qs.js",
     "scripts": {
-        "test": "jest --watchAll"
+        "test": "jest --coverage",
+        "test-all": "jest --watchAll"
     },
     "keywords": [],
     "author": "",
