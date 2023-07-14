@@ -1,0 +1,31 @@
+{
+    "name": "ssr",
+    "version": "1.0.0",
+    "description": "",
+    "main": "server.js",
+    "scripts": {
+        "client:dev": "webpack-dev-server",
+        "client:build": "webpack"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@koa/router": "^12.0.0",
+        "koa": "^2.14.2",
+        "vue": "^2.7.14",
+        "vue-server-renderer": "^2.7.14"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.11.4",
+        "@babel/preset-env": "^7.22.0",
+        "babel-loader": "^8.1.3",
+        "css-loader": "^4.2.1",
+        "html-webpack-plugin": "^4.3.0",
+        "vue-loader": "^15.9.3",
+        "vue-style-loader": "^4.1.2",
+        "vue-template-compiler": "^2.6.12",
+        "webpack": "^4.44.1",
+        "webpack-cli": "^3.3.12",
+        "webpack-dev-server": "^3.11.0"
+    }
+}
