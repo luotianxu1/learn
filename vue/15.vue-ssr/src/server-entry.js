@@ -3,8 +3,15 @@ import createApp from './app.js'
 
 // 服务端渲染可以返回一个函数
 
-export default () => {
+export default (context) => {
     // 此方法是在服务端调用的
-    let { app } = createApp()
-    return app // 每次都能产生一个新的应用
+    return new Promise((resolve, reject) => {
+        let { app, router } = createApp()
+
+        router.push(context.url)
+        router.onReady(() => {
+            resolve(app)
+        })
+        // return app // 每次都能产生一个新的应用
+    })
 }

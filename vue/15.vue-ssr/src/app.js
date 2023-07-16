@@ -3,12 +3,13 @@ import App from './App.vue'
 import createRouter from './create-router'
 
 export default () => {
+    const router = createRouter()
     const app = new Vue({
-        el: '#app',
+        router,
         render: (h) => h(App),
     })
 
-    return { app }
+    return { app, router }
 }
 
 // 1、以前代码在前端跑到时候，每个客户端访问都有一个独立的实例

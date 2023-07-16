@@ -1,16 +1,17 @@
 <template>
-  <div id="app">
-      <Foo></Foo>
-      <Bar></Bar>
-  </div>
+    <div id="app">
+        <router-link to="/">foo</router-link>
+        <router-link to="/bar">bar</router-link>
+        <router-view></router-view>
+    </div>
 </template>
 <script>
-import Bar from './components/Bar.vue';
+import Bar from './components/Bar.vue'
 import Foo from './components/Foo.vue'
 export default {
-    components:{
+    components: {
         Bar,
-        Foo
-    }
+        Foo,
+    },
 }
 </script>

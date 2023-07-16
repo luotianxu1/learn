@@ -14,8 +14,8 @@ module.exports = merge(base, {
     },
     plugins: [
         new VueSSRClientPlugin(),
-        // new HtmlWebpackPlugin({
-        //     template: resolve('../public/index.html'),
-        // }),
+        new HtmlWebpackPlugin({
+            template: resolve('../public/index.html'),
+        }),
     ],
 })

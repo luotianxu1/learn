@@ -27,7 +27,13 @@ const render = VueServerRender.createBundleRenderer(serverBundle, {
 })
 
 router.get('/', async (ctx) => {
-    ctx.body = await render.renderToString()
+    ctx.body = await new Promise((resolve, reject) => {
+        render.renderToString({ url: ctx.url }, (err, html) => {
+            if (err) reject(err)
+            resolve(html)
+        })
+    })
+    //    const html = await render.renderToString(); // 生成字符串
 })
 
 app.use(router.routes()) // 将路由注册到应用上
