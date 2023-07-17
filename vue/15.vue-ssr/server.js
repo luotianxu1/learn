@@ -35,7 +35,17 @@ router.get('/', async (ctx) => {
     })
     //    const html = await render.renderToString(); // 生成字符串
 })
-
-app.use(router.routes()) // 将路由注册到应用上
+router.get('/(.*)', async (ctx) => {
+    console.log('跳转')
+    ctx.body = await new Promise((resolve, reject) => {
+        render.renderToString({ url: ctx.url }, (err, html) => {
+            // 通过服务端渲染 渲染后返回
+            if (err && err.code == 404) resolve(`not found`)
+            console.log(html)
+            resolve(html)
+        })
+    })
+})
 app.use(static(path.resolve(__dirname, 'dist')))
+app.use(router.routes()) // 将路由注册到应用上
 app.listen(3001) // 监听3000端口
