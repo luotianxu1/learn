@@ -1,10 +1,7 @@
 import { isObject } from '@vue/shared'
+import { ReactiveFlags, baseHandler } from './basehandler'
 
 const reactiveMap = new WeakMap() // key必须是对象
-
-const enum ReactiveFlags {
-    IS_REACTIVE = '_v_isReactive',
-}
 
 export function reactive(target) {
     if (!isObject(target)) {
@@ -21,20 +18,7 @@ export function reactive(target) {
     }
 
     // es6中的proxy
-    const proxy = new Proxy(target, {
-        get(target, key, receiver) {
-            if (key === ReactiveFlags.IS_REACTIVE) {
-                return true
-            }
-            console.log('这里可以记录这个属性使用了哪个effect')
-            return Reflect.get(target, key, receiver)
-        },
-        set(target, key, value, receiver) {
-            console.log('这里可以通知effect重新执行')
-            target[key] = value
-            return Reflect.set(target, key, value, receiver)
-        },
-    })
+    const proxy = new Proxy(target, baseHandler)
 
     reactiveMap.set(target, proxy)
     return proxy
