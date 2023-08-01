@@ -4,13 +4,23 @@
 
 export let activeEffect = undefined
 
+function cleanEffect(effect) {
+    // 需要清理effect中存入属性中的set中的effect
+    // 每次执行前都需要将effect只对应属性的set集合都清理掉
+    let deps = effect.deps
+    for (let i = 0; i < deps.length; i++) {
+        deps[i].delete(effect)
+    }
+    effect.deps.length = 0
+}
+
 export class ReactiveEffect {
     public active = true
     public parent = null
     public deps = [] // effect中用了哪些属性，后续清理时要使用
 
     // 传递的fn会放到this上
-    constructor(public fn) {}
+    constructor(public fn, public scheduler) {}
 
     // effectScope 可以实现让所有的effect失效
     run() {
@@ -21,12 +31,20 @@ export class ReactiveEffect {
             try {
                 this.parent = activeEffect
                 activeEffect = this
-                this.fn() // 去proxy对象是给你取值，取值的时候，我要让这个熟悉和当前的effect函数关联起来，稍后数据变化了，可以重新执行effect函数
+                cleanEffect(this)
+                return this.fn() // 去proxy对象是给你取值，取值的时候，我要让这个熟悉和当前的effect函数关联起来，稍后数据变化了，可以重新执行effect函数
             } finally {
                 // 取消当前正在运行的effect
                 activeEffect = this.parent
                 this.parent = null
             }
+        }
+    }
+
+    stop() {
+        if (this.active) {
+            this.active = false
+            cleanEffect(this)
         }
     }
 }
@@ -40,13 +58,19 @@ export function trigger(target, key, value) {
         return // 属性没有依赖任何的effect
     }
 
-    const effects = depsMap.get(key)
-    effects &&
+    let effects = depsMap.get(key)
+    if (effects) {
+        effects = new Set(effects)
         effects.forEach((effect) => {
             if (effect !== activeEffect) {
-                effect.run() // 重新执行effect
+                if (effect.scheduler) {
+                    effect.scheduler()
+                } else {
+                    effect.run() // 重新执行effect
+                }
             }
         })
+    }
 }
 
 export function track(target, key) {
@@ -67,11 +91,13 @@ export function track(target, key) {
         }
     }
     // 让属性记录所用到的effect是谁 哪个effect对应哪些属性
-    console.log(activeEffect, targetMap)
 }
 
-export function effect(fn) {
+export function effect(fn, options = {} as any) {
     // 将用户传递的函数变成响应式的effect
-    const _effect = new ReactiveEffect(fn)
+    const _effect = new ReactiveEffect(fn, options.scheduler)
     _effect.run()
+    const runner = _effect.run.bind(_effect)
+    runner.effect = _effect // 暴露effect实例
+    return runner // 用户可以手动调用runner重新执行
 }

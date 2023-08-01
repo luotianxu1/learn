@@ -1,4 +1,6 @@
+import { isObject } from '@vue/shared'
 import { track, trigger } from './effect'
+import { reactive } from './reactive'
 
 export const enum ReactiveFlags {
     IS_REACTIVE = '_v_isReactive',
@@ -13,8 +15,13 @@ export const baseHandler = {
 
         track(target, key)
 
+        let res = Reflect.get(target, key, receiver)
+        if (isObject(res)) {
+            return reactive(res)
+        }
+
         // console.log('这里可以记录这个属性使用了哪个effect')
-        return Reflect.get(target, key, receiver)
+        return res
     },
     set(target, key, value, receiver) {
         // console.log('这里可以通知effect重新执行')

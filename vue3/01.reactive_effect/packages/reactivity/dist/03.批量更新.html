@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="./reactivity.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+        <div id="app"></div>
+        <script>
+            const { effect, reactive } = VueReactivity
+
+            const state = reactive({
+                flag: true,
+                name: 'jw',
+                age: 30,
+                n: { n: 2 },
+            })
+
+            // effect返回runner是让用户可以自己控制渲染逻辑
+            let waiting = false
+            const runner = effect(
+                () => {
+                    console.log('runner')
+                    document.body.innerHTML = state.age + '' + state.n.n
+                },
+                {
+                    // 调度函数
+                    scheduler() {
+                        if (!waiting) {
+                            waiting = true
+                            Promise.resolve().then(() => {
+                                runner()
+                                waiting = false
+                            })
+                        }
+                    },
+                }
+            )
+
+            setTimeout(() => {
+                state.age++
+                state.age++
+                state.age++
+                state.n.n = 6
+            }, 500)
+        </script>
+    </body>
+</html>
