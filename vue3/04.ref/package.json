@@ -1,0 +1,20 @@
+{
+    "name": "01.init",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "dev": "node scripts/dev.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "vue": "^3.3.4"
+    },
+    "devDependencies": {
+        "esbuild": "^0.15.17",
+        "minimist": "^1.2.8",
+        "typescript": "^5.1.6"
+    }
+}

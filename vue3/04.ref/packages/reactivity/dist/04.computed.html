@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="./reactivity.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+        <div id="app"></div>
+        <script>
+            const { effect, reactive, computed } = VueReactivity
+
+            const state = reactive({
+                firstName: 'luo',
+                lastName: 'tian',
+            })
+
+            // const fullName = computed(() => {
+            //     return state.firstName + state.lastName
+            // })
+            const fullName = computed({
+                get() {
+                    return state.firstName + state.lastName
+                },
+                set(value) {
+                    state.lastName = value
+                },
+            })
+            fullName.value = 100
+
+            effect(() => {
+                document.body.innerHTML = fullName.value
+            })
+
+            setTimeout(() => {
+                state.firstName = '罗'
+            }, 400)
+
+            // 计算属性就是一个effect，当我取值的时候，会访问firstName，lastName的值，会让firstname和lastName来收集当前的computedEffect
+        </script>
+    </body>
+</html>
