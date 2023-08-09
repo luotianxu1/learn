@@ -8,10 +8,16 @@
     <body>
         <div id="app"></div>
         <script src="./runtime-dom.global.js"></script>
-        <script type="module">
-            const { createVNode } = vueRuntimeDom
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
 
-            console.log(createVNode('div', null, 'hello'))
+        <script type="module">
+            const { createVNode, h, createRenderer, render } = vueRuntimeDom
+            render(h('h1', [123, h('span', 'hello')]), app)
+            console.log(h('h1', h('span', 'hello word')))
+
+            // setTimeout(() => {
+            //     render(h('h1', h('span', 'hello world 123')), app)
+            // }, 1000)
         </script>
     </body>
 </html>

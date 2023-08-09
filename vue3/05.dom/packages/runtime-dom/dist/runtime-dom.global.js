@@ -21,12 +21,14 @@ var vueRuntimeDom = (() => {
   var src_exports = {};
   __export(src_exports, {
     computed: () => computed,
+    createRenderer: () => createRenderer,
     createVNode: () => createVNode,
     effect: () => effect,
     h: () => h,
     proxyRefs: () => proxyRefs,
     reactive: () => reactive,
     ref: () => ref,
+    render: () => render,
     toRef: () => toRef,
     toRefs: () => toRefs,
     watch: () => watch
@@ -147,9 +149,17 @@ var vueRuntimeDom = (() => {
   function isString(value) {
     return typeof value === "string";
   }
+  var isArray = Array.isArray;
+  function isNumber(value) {
+    return typeof value === "number";
+  }
 
   // packages/runtime-core/src/createVNode.ts
-  function createVNode(type, props, children = null) {
+  var Text = Symbol("Text");
+  function isVNode(value) {
+    return !!value.__v_isVNode;
+  }
+  function createVNode(type, props = null, children = null) {
     const shapeFlag = isString(type) ? 1 /* ELEMENT */ : 0;
     const vnode = {
       __v_isVNode: true,
@@ -174,7 +184,120 @@ var vueRuntimeDom = (() => {
   }
 
   // packages/runtime-core/src/h.ts
-  function h() {
+  function h(type, propsOrChildren, children) {
+    const l = arguments.length;
+    if (l === 2) {
+      if (isObject(propsOrChildren) && !Array.isArray(propsOrChildren)) {
+        if (isVNode(propsOrChildren)) {
+          return createVNode(type, null, [propsOrChildren]);
+        }
+        return createVNode(type, propsOrChildren);
+      } else {
+        return createVNode(type, null, propsOrChildren);
+      }
+    } else {
+      if (l === 3 && isVNode(children)) {
+        children = [children];
+      } else if (l > 3) {
+        children = Array.from(arguments).slice(2);
+      }
+      return createVNode(type, propsOrChildren, children);
+    }
+  }
+
+  // packages/runtime-core/src/renderer.ts
+  function createRenderer(options) {
+    let {
+      createElement: hostCreateElement,
+      createTextNode: hostCreateTextNode,
+      insert: hostInsert,
+      remove: hostRemove,
+      querySelector: hostQuerySelector,
+      parentNode: hostParentNode,
+      nextSibling: hostNextSibling,
+      setText: hostSetText,
+      setElementText: hostSetElementText,
+      patchProp: hostPatchProp
+    } = options;
+    function normalize(children, i) {
+      if (isString(children[i]) || isNumber(children[i])) {
+        children[i] = createVNode(Text, null, children[i]);
+      }
+      return children[i];
+    }
+    function mountChildren(children, container) {
+      for (let i = 0; i < children.length; i++) {
+        let child = normalize(children, i);
+        patch(null, child, container);
+      }
+    }
+    function pathProps(oldProps, newProps, el) {
+      if (oldProps == null)
+        oldProps = {};
+      if (newProps == null)
+        newProps = {};
+      for (let key in newProps) {
+        hostPatchProp(el, key, oldProps[key], newProps[key]);
+      }
+      for (let key in oldProps) {
+        if (newProps[key] == null) {
+          hostPatchProp(el, key, oldProps[key], null);
+        }
+      }
+    }
+    function mountElement(vnode, container) {
+      const { type, props, children, shapeFlag } = vnode;
+      const el = vnode.el = hostCreateElement(type);
+      if (children) {
+        if (shapeFlag & 8 /* TEXT_CHILDREN */) {
+          hostSetElementText(el, children);
+        }
+        if (shapeFlag & 16 /* ARRAY_CHILDREN */) {
+          mountChildren(children, el);
+        }
+      }
+      hostInsert(el, container);
+    }
+    const processText = (n1, n2, el) => {
+      if (n1 == null) {
+        hostInsert(n2.el = hostCreateTextNode(n2.children), el);
+      } else {
+        let el2 = n2.el = n1.el;
+        if (n1.children === n2.children) {
+          return;
+        }
+        hostSetText(el2, n2.children);
+      }
+    };
+    const processElement = (n1, n2, container, anchor) => {
+      if (n1 == null) {
+        mountElement(n2, container);
+      } else {
+      }
+    };
+    function patch(n1, n2, container, anchor = null) {
+      const { type, shapeFlag } = n2;
+      switch (type) {
+        case Text:
+          processText(n1, n2, container);
+          break;
+        default:
+          if (shapeFlag & 1 /* ELEMENT */) {
+            processElement(n1, n2, container, anchor);
+          } else if (shapeFlag & 6 /* COMPONENT */) {
+          }
+      }
+    }
+    function render2(vnode, container) {
+      if (vnode == null) {
+      } else {
+        patch(container._vnode || null, vnode, container);
+      }
+      container._vnode = vnode;
+    }
+    return {
+      render: render2
+    };
   }
 
   // packages/reactivity/src/effect.ts
@@ -461,6 +584,10 @@ var vueRuntimeDom = (() => {
 
   // packages/runtime-dom/src/index.ts
   var renderOptions = Object.assign(nodeOps, { patchProp });
+  function render(vnode, container) {
+    let { render: render2 } = createRenderer(renderOptions);
+    return render2(vnode, container);
+  }
   return __toCommonJS(src_exports);
 })();
 //# sourceMappingURL=runtime-dom.global.js.map

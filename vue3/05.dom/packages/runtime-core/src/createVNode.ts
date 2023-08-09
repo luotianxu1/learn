@@ -1,5 +1,7 @@
 import { isString, ShapeFlags } from '@vue/shared'
 
+export const Text = Symbol('Text')
+
 export function isVNode(value) {
     return !!value.__v_isVNode // 用来判断是否是虚拟节点
 }
@@ -7,7 +9,7 @@ export function isSameVnode(n1, n2) {
     // 如果前后没key 都是undefiend ，认为key是一样的
     return n1.type === n2.type && n1.key === n2.key
 }
-export function createVNode(type, props, children = null) {
+export function createVNode(type, props = null, children = null) {
     // 虚拟节点需要有一些重要的属性
     const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0
     const vnode = {

@@ -10,4 +10,10 @@ export function isString(value) {
     return typeof value === 'string'
 }
 
+export const isArray = Array.isArray
+
+export function isNumber(value) {
+    return typeof value === 'number'
+}
+
 export * from './shapeFlag'
