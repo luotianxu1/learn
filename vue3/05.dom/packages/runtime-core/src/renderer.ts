@@ -1,6 +1,10 @@
 import { ShapeFlags, isNumber, isString } from '@vue/shared'
 import { Text, createVNode } from './createVNode'
 
+export function isSameVnode(v1, v2) {
+    return v1.type === v2.type && v1.key === v2.key
+}
+
 // 用户可以调用此方法传入对应的渲染选项
 export function createRenderer(options) {
     let {
@@ -51,11 +55,11 @@ export function createRenderer(options) {
         // 因为我们后续需要比对虚拟节点的差异，所以需要保留对应的真实节点
         const el = (vnode.el = hostCreateElement(type))
 
-        // if (props) {
-        //     for (let key in props) {
-        //         pathProps(undefined, props, el)
-        //     }
-        // }
+        if (props) {
+            for (let key in props) {
+                pathProps(undefined, props, el)
+            }
+        }
 
         if (children) {
             if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
@@ -81,22 +85,114 @@ export function createRenderer(options) {
         }
     }
 
+    function unmountChildren(children) {
+        children.forEach((child) => {
+            unmount(child)
+        })
+    }
+
+    function patchKeydChildren(c1, c2, el) {
+        // 比较c1和c2两个数组之间的差异 再去更新el
+        let i = 0
+        let e1 = c1.length - 1
+        let e2 = c2.length - 1
+
+        // 有任何一方比对完成后就无需再比对
+        while (i <= e1 && i <= e2) {
+            const n1 = c1[i]
+            const n2 = c2[i]
+            if (isSameVnode(n1, n2)) {
+                patch(n1, n2, el)
+            } else {
+                break
+            }
+            i++
+        }
+    }
+
+    function patchChildren(n1, n2, el) {
+        let c1 = n1.children
+        let c2 = n2.children
+
+        const prevShapeFlag = n1.shapeFlag
+        const shapeFlag = n2.shapeFlag
+
+        // 开始比较儿子的情况
+        /**
+         * 新的       旧的
+         * 文本       数组  (删除老儿子，设置文本内容)
+         * 文本       文本  （更新文本内容）
+         * 文本       空    （更新文本即可）
+         * 数组       数组      （diff）
+         * 数组       文本      （清空文本，进行挂载）
+         * 空         数组      （删除所有儿子）
+         * 空         文本      （清空文本）
+         * 空         空        （无需处理）
+         */
+
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            // hello   = [span,span]
+            if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                // 老的是数组 ， 都移除即可
+                unmountChildren(c1)
+            }
+            // 新的是文本 老的可能是文本、或者空
+            if (c1 !== c2) {
+                hostSetElementText(el, c2)
+            }
+        } else {
+            // 之前是数组
+            if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    // 双方都是数组   核心diff算法  ?? todo,,,
+                    patchKeydChildren(c1, c2, el)
+                } else {
+                    // 现在是空的情况
+                    unmountChildren(c1)
+                }
+            } else {
+                // 老的是文本 或者空
+                if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+                    hostSetElementText(el, '')
+                }
+                if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    mountChildren(c2, el)
+                }
+            }
+        }
+    }
+
+    function patchElement(n1, n2) {
+        // n1和n2能复用说明dom节点就不用删除了
+        let el = (n2.el = n1.el) // 1.节点服用
+        let oldProps = n1.props
+        let newProps = n2.props
+        pathProps(oldProps, newProps, el) // 2.比较属性
+        patchChildren(n1, n2, el) // 3.比较儿子
+    }
+
     const processElement = (n1, n2, container, anchor) => {
         if (n1 == null) {
             mountElement(n2, container)
         } else {
             // 元素更新了, 属性变化。 更新属性
-            //   patchElement(n1, n2);
+            patchElement(n1, n2)
         }
     }
 
+    function unmount(n1) {
+        hostRemove(n1.el)
+    }
+
     function patch(n1, n2, container, anchor = null) {
+        // 判断标签名和对应的key 如果一样 说明是同一个节点 div key
+        if (n1 && !isSameVnode(n1, n2)) {
+            unmount(n1)
+            n1 = null // 将n1重置为null 此时会走n2的初始化
+        }
+
         // 看n1 如果是null 说明没有之前的虚拟节点
         // 看n1 如果有值，说明要走diff算法
-        // if (n1 == null) {
-        // mountElement(n2, container)
-        // }
-
         const { type, shapeFlag } = n2
         switch (type) {
             case Text:
@@ -118,6 +214,9 @@ export function createRenderer(options) {
     function render(vnode, container) {
         if (vnode == null) {
             // 卸载元素
+            if (container._vnode) {
+                unmount(container._vnode)
+            }
         } else {
             patch(container._vnode || null, vnode, container)
         }

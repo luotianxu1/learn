@@ -12,12 +12,56 @@
 
         <script type="module">
             const { createVNode, h, createRenderer, render } = vueRuntimeDom
-            render(h('h1', [123, h('span', 'hello')]), app)
-            console.log(h('h1', h('span', 'hello word')))
+            // render(
+            //     h(
+            //         'h1',
+            //         {
+            //             a: 1,
+            //             b: 2,
+            //             style: { color: 'red' },
+            //             onClick: () => alert(1),
+            //         },
+            //         [123, h('span', 'hello')]
+            //     ),
+            //     app
+            // )
+
+            // render(
+            //     h('h1', { style: { color: 'blue' } }, h('span', 'hello')),
+            //     app
+            // )
 
             // setTimeout(() => {
-            //     render(h('h1', h('span', 'hello world 123')), app)
+            //     render(
+            //         h('h1', { style: { color: 'red' } }, h('span', 'hello')),
+            //         app
+            //     )
             // }, 1000)
+            // setTimeout(() => {
+            //     render(null, app)
+            // }, 2000)
+
+            // 情况1
+            render(
+                h('div', { style: { color: 'blue' } }, [
+                    h('p', { key: 'a1', style: { color: 'red' } }, 'hello'),
+                    h('p', { key: 'a2', style: { color: 'yellow' } }, 'world'),
+                ]),
+                app
+            )
+            setTimeout(() => {
+                render(
+                    h('div', { style: { color: 'blue' } }, [
+                        h(
+                            'p',
+                            { key: 'a1', style: { color: 'pink' } },
+                            'hello'
+                        ),
+                        h('p', { key: 'a2', style: { color: 'red' } }, 'world'),
+                    ]),
+                    app
+                )
+            }, 3000)
         </script>
     </body>
 </html>
