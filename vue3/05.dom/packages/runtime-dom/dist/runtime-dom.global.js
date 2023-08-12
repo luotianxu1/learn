@@ -111,6 +111,10 @@ var vueRuntimeDom = (() => {
 
   // packages/runtime-dom/src/modules/style.ts
   function patchStyle(el, prevVal, nextVal) {
+    if (prevVal == null)
+      prevVal = {};
+    if (nextVal == null)
+      nextVal = {};
     const style = el.style;
     if (nextVal) {
       for (let key in nextVal) {
@@ -248,7 +252,7 @@ var vueRuntimeDom = (() => {
         }
       }
     }
-    function mountElement(vnode, container) {
+    function mountElement(vnode, container, anchor) {
       const { type, props, children, shapeFlag } = vnode;
       const el = vnode.el = hostCreateElement(type);
       if (props) {
@@ -264,7 +268,7 @@ var vueRuntimeDom = (() => {
           mountChildren(children, el);
         }
       }
-      hostInsert(el, container);
+      hostInsert(el, container, anchor);
     }
     const processText = (n1, n2, el) => {
       if (n1 == null) {
@@ -283,6 +287,7 @@ var vueRuntimeDom = (() => {
       });
     }
     function patchKeydChildren(c1, c2, el) {
+      var _a;
       let i = 0;
       let e1 = c1.length - 1;
       let e2 = c2.length - 1;
@@ -295,6 +300,56 @@ var vueRuntimeDom = (() => {
           break;
         }
         i++;
+      }
+      while (i <= e1 && i <= e2) {
+        const n1 = c1[e1];
+        const n2 = c2[e2];
+        if (isSameVnode(n1, n2)) {
+          patch(n1, n2, el);
+        } else {
+          break;
+        }
+        e1--;
+        e2--;
+      }
+      if (i > e1) {
+        while (i <= e2) {
+          const nextPos = e2 + 1;
+          const anchor = (_a = c2[nextPos]) == null ? void 0 : _a.el;
+          patch(null, c2[i], el, anchor);
+          i++;
+        }
+      } else if (i > e2) {
+        while (i <= e1) {
+          unmount(c1[i]);
+          i++;
+        }
+      }
+      let s1 = i;
+      let s2 = i;
+      const keyToNewIndexMap = /* @__PURE__ */ new Map();
+      const toBePatched = e2 - s2 + 1;
+      for (let i2 = s2; i2 <= e2; i2++) {
+        keyToNewIndexMap.set(c2[i2].key, i2);
+      }
+      for (let i2 = s1; i2 <= e1; i2++) {
+        const vnode = c1[i2];
+        let newIndex = keyToNewIndexMap.get(vnode.key);
+        if (newIndex == void 0) {
+          unmount(vnode);
+        } else {
+          patch(vnode, c2[newIndex], el);
+        }
+      }
+      for (let i2 = toBePatched - 1; i2 >= 0; i2--) {
+        const currentIndex = s2 + i2;
+        const child = c2[currentIndex];
+        const anchor = currentIndex + 1 < c2.length ? c2[currentIndex + 1].el : null;
+        if (child.el == null) {
+          patch(null, child, el, anchor);
+        } else {
+          hostInsert(child.el, el, anchor);
+        }
       }
     }
     function patchChildren(n1, n2, el) {
@@ -335,7 +390,7 @@ var vueRuntimeDom = (() => {
     }
     const processElement = (n1, n2, container, anchor) => {
       if (n1 == null) {
-        mountElement(n2, container);
+        mountElement(n2, container, anchor);
       } else {
         patchElement(n1, n2);
       }

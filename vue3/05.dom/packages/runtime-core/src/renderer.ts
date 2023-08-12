@@ -50,7 +50,7 @@ export function createRenderer(options) {
         }
     }
 
-    function mountElement(vnode, container) {
+    function mountElement(vnode, container, anchor) {
         const { type, props, children, shapeFlag } = vnode
         // 因为我们后续需要比对虚拟节点的差异，所以需要保留对应的真实节点
         const el = (vnode.el = hostCreateElement(type))
@@ -70,7 +70,7 @@ export function createRenderer(options) {
             }
         }
 
-        hostInsert(el, container)
+        hostInsert(el, container, anchor)
     }
 
     const processText = (n1, n2, el) => {
@@ -97,6 +97,7 @@ export function createRenderer(options) {
         let e1 = c1.length - 1
         let e2 = c2.length - 1
 
+        // async 从头
         // 有任何一方比对完成后就无需再比对
         while (i <= e1 && i <= e2) {
             const n1 = c1[i]
@@ -107,6 +108,76 @@ export function createRenderer(options) {
                 break
             }
             i++
+        }
+
+        // sync from end
+        while (i <= e1 && i <= e2) {
+            const n1 = c1[e1]
+            const n2 = c2[e2]
+            if (isSameVnode(n1, n2)) {
+                patch(n1, n2, el)
+            } else {
+                break
+            }
+            e1--
+            e2--
+        }
+
+        // 当i的值大于e1说明，老的全部完成对比，但是新的还有剩余
+        // i到e2之前到内容就是要新增的
+        if (i > e1) {
+            // 新的多老的少
+            while (i <= e2) {
+                const nextPos = e2 + 1
+                const anchor = c2[nextPos]?.el // 获取下一个元素的el
+                // 我得知道是向前插入 还是向后插入，如果是向前插入得有参照物
+                patch(null, c2[i], el, anchor)
+                i++
+            }
+        } else if (i > e2) {
+            // 老的多，新的少
+            while (i <= e1) {
+                unmount(c1[i])
+                i++
+            }
+        }
+
+        // --- 以上的情况 就是一些头尾的特殊操作，但是不适用其他情况----
+
+        let s1 = i
+        let s2 = i
+
+        const keyToNewIndexMap = new Map()
+
+        const toBePatched = e2 - s2 + 1 // 新的儿子有这个么多个需要被patch
+
+        for (let i = s2; i <= e2; i++) {
+            keyToNewIndexMap.set(c2[i].key, i)
+        }
+        for (let i = s1; i <= e1; i++) {
+            const vnode = c1[i]
+            let newIndex = keyToNewIndexMap.get(vnode.key)
+            if (newIndex == undefined) {
+                // 老的里面有的新的没用
+                unmount(vnode)
+            } else {
+                // 用老的虚拟节点 c和新的虚拟节点做比对
+                patch(vnode, c2[newIndex], el) // 这里只是比较自己的属性和儿子，并没有移动
+            }
+        }
+
+        // 需要按照新的位置重新排列，并且需要将新增元素添加上
+        for (let i = toBePatched - 1; i >= 0; i--) {
+            const currentIndex = s2 + i
+            const child = c2[currentIndex]
+
+            const anchor =
+                currentIndex + 1 < c2.length ? c2[currentIndex + 1].el : null
+            if (child.el == null) {
+                patch(null, child, el, anchor)
+            } else {
+                hostInsert(child.el, el, anchor)
+            }
         }
     }
 
@@ -173,7 +244,7 @@ export function createRenderer(options) {
 
     const processElement = (n1, n2, container, anchor) => {
         if (n1 == null) {
-            mountElement(n2, container)
+            mountElement(n2, container, anchor)
         } else {
             // 元素更新了, 属性变化。 更新属性
             patchElement(n1, n2)

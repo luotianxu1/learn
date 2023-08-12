@@ -41,27 +41,34 @@
             //     render(null, app)
             // }, 2000)
 
-            // 情况1
             render(
-                h('div', { style: { color: 'blue' } }, [
-                    h('p', { key: 'a1', style: { color: 'red' } }, 'hello'),
-                    h('p', { key: 'a2', style: { color: 'yellow' } }, 'world'),
+                h('div', { style: { color: 'red' } }, [
+                    h('li', { key: 'a' }, 'a'),
+                    h('li', { key: 'b' }, 'b'),
+                    h('li', { key: 'c' }, 'c'),
+                    h('li', { key: 'd' }, 'd'),
+                    h('li', { key: 'e' }, 'e'),
+                    h('li', { key: 'f' }, 'f'),
+                    h('li', { key: 'g' }, 'g'),
                 ]),
                 app
             )
+
             setTimeout(() => {
                 render(
                     h('div', { style: { color: 'blue' } }, [
-                        h(
-                            'p',
-                            { key: 'a1', style: { color: 'pink' } },
-                            'hello'
-                        ),
-                        h('p', { key: 'a2', style: { color: 'red' } }, 'world'),
+                        h('li', { key: 'a' }, 'a'),
+                        h('li', { key: 'b' }, 'b'),
+                        h('li', { key: 'd' }, 'd'),
+                        h('li', { key: 'c' }, 'c'),
+                        h('li', { key: 'e' }, 'e'),
+                        h('li', { key: 'h' }, 'h'),
+                        h('li', { key: 'f' }, 'f'),
+                        h('li', { key: 'g' }, 'g'),
                     ]),
                     app
                 )
-            }, 3000)
+            }, 1000)
         </script>
     </body>
 </html>
