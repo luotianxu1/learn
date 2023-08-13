@@ -209,6 +209,49 @@ var vueRuntimeDom = (() => {
     }
   }
 
+  // packages/runtime-core/src/sequence.ts
+  function getSequence(arr) {
+    let len = arr.length;
+    const p = arr.slice(0).fill(-1);
+    let result = [0];
+    let lastIndex;
+    let start;
+    let end;
+    let middle;
+    for (let i2 = 0; i2 < len; i2++) {
+      const arrI = arr[i2];
+      if (arrI !== 0) {
+        lastIndex = result[result.length - 1];
+        if (arr[lastIndex] < arrI) {
+          result.push(i2);
+          p[i2] = lastIndex;
+          continue;
+        }
+        start = 0;
+        end = result.length - 1;
+        while (start < end) {
+          middle = Math.floor((start + end) / 2);
+          if (arr[result[middle]] < arrI) {
+            start = middle + 1;
+          } else {
+            end = middle;
+          }
+        }
+        if (arrI < arr[result[end]]) {
+          p[i2] = result[end - 1];
+          result[end] = i2;
+        }
+      }
+    }
+    let i = result.length;
+    let last = result[i - 1];
+    while (i-- > 0) {
+      result[i] = last;
+      last = p[last];
+    }
+    return result;
+  }
+
   // packages/runtime-core/src/renderer.ts
   function isSameVnode(v1, v2) {
     return v1.type === v2.type && v1.key === v2.key;
@@ -324,31 +367,40 @@ var vueRuntimeDom = (() => {
           unmount(c1[i]);
           i++;
         }
-      }
-      let s1 = i;
-      let s2 = i;
-      const keyToNewIndexMap = /* @__PURE__ */ new Map();
-      const toBePatched = e2 - s2 + 1;
-      for (let i2 = s2; i2 <= e2; i2++) {
-        keyToNewIndexMap.set(c2[i2].key, i2);
-      }
-      for (let i2 = s1; i2 <= e1; i2++) {
-        const vnode = c1[i2];
-        let newIndex = keyToNewIndexMap.get(vnode.key);
-        if (newIndex == void 0) {
-          unmount(vnode);
-        } else {
-          patch(vnode, c2[newIndex], el);
+      } else {
+        let s1 = i;
+        let s2 = i;
+        const keyToNewIndexMap = /* @__PURE__ */ new Map();
+        const toBePatched = e2 - s2 + 1;
+        for (let i2 = s2; i2 <= e2; i2++) {
+          keyToNewIndexMap.set(c2[i2].key, i2);
         }
-      }
-      for (let i2 = toBePatched - 1; i2 >= 0; i2--) {
-        const currentIndex = s2 + i2;
-        const child = c2[currentIndex];
-        const anchor = currentIndex + 1 < c2.length ? c2[currentIndex + 1].el : null;
-        if (child.el == null) {
-          patch(null, child, el, anchor);
-        } else {
-          hostInsert(child.el, el, anchor);
+        const seq = new Array(toBePatched).fill(0);
+        for (let i2 = s1; i2 <= e1; i2++) {
+          const vnode = c1[i2];
+          let newIndex = keyToNewIndexMap.get(vnode.key);
+          if (newIndex == void 0) {
+            unmount(vnode);
+          } else {
+            seq[newIndex - s2] = i2 + 1;
+            patch(vnode, c2[newIndex], el);
+          }
+        }
+        let incr = getSequence(seq);
+        let j = incr.length - 1;
+        for (let i2 = toBePatched - 1; i2 >= 0; i2--) {
+          const currentIndex = s2 + i2;
+          const child = c2[currentIndex];
+          const anchor = currentIndex + 1 < c2.length ? c2[currentIndex + 1].el : null;
+          if (seq[i2] == 0) {
+            patch(null, child, el, anchor);
+          } else {
+            if (i2 !== incr[j]) {
+              hostInsert(child.el, el, anchor);
+            } else {
+              j--;
+            }
+          }
         }
       }
     }

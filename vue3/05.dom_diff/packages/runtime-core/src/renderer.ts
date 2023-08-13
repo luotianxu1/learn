@@ -1,5 +1,6 @@
 import { ShapeFlags, isNumber, isString } from '@vue/shared'
 import { Text, createVNode } from './createVNode'
+import { getSequence } from './sequence'
 
 export function isSameVnode(v1, v2) {
     return v1.type === v2.type && v1.key === v2.key
@@ -140,43 +141,59 @@ export function createRenderer(options) {
                 unmount(c1[i])
                 i++
             }
-        }
+        } else {
+            // --- 以上的情况 就是一些头尾的特殊操作，但是不适用其他情况----
+            let s1 = i
+            let s2 = i
 
-        // --- 以上的情况 就是一些头尾的特殊操作，但是不适用其他情况----
+            const keyToNewIndexMap = new Map()
 
-        let s1 = i
-        let s2 = i
+            const toBePatched = e2 - s2 + 1 // 新的儿子有这个么多个需要被patch
 
-        const keyToNewIndexMap = new Map()
-
-        const toBePatched = e2 - s2 + 1 // 新的儿子有这个么多个需要被patch
-
-        for (let i = s2; i <= e2; i++) {
-            keyToNewIndexMap.set(c2[i].key, i)
-        }
-        for (let i = s1; i <= e1; i++) {
-            const vnode = c1[i]
-            let newIndex = keyToNewIndexMap.get(vnode.key)
-            if (newIndex == undefined) {
-                // 老的里面有的新的没用
-                unmount(vnode)
-            } else {
-                // 用老的虚拟节点 c和新的虚拟节点做比对
-                patch(vnode, c2[newIndex], el) // 这里只是比较自己的属性和儿子，并没有移动
+            for (let i = s2; i <= e2; i++) {
+                keyToNewIndexMap.set(c2[i].key, i)
             }
-        }
 
-        // 需要按照新的位置重新排列，并且需要将新增元素添加上
-        for (let i = toBePatched - 1; i >= 0; i--) {
-            const currentIndex = s2 + i
-            const child = c2[currentIndex]
+            const seq = new Array(toBePatched).fill(0)
 
-            const anchor =
-                currentIndex + 1 < c2.length ? c2[currentIndex + 1].el : null
-            if (child.el == null) {
-                patch(null, child, el, anchor)
-            } else {
-                hostInsert(child.el, el, anchor)
+            for (let i = s1; i <= e1; i++) {
+                const vnode = c1[i]
+                let newIndex = keyToNewIndexMap.get(vnode.key)
+                if (newIndex == undefined) {
+                    // 老的里面有的新的没用
+                    unmount(vnode)
+                } else {
+                    // 新的老的都有，就记录下来当前对应的索引，就可以判断出哪些元素不需要移动了
+                    // 用新的位置和老的位置做一个关联
+                    // 让被patched过的索引用老节点的索引作为标识，防止出现0的情况 + 1
+                    seq[newIndex - s2] = i + 1
+                    // 用老的虚拟节点 c和新的虚拟节点做比对
+                    patch(vnode, c2[newIndex], el) // 这里只是比较自己的属性和儿子，并没有移动
+                }
+            }
+
+            let incr = getSequence(seq)
+
+            let j = incr.length - 1
+
+            // 需要按照新的位置重新排列，并且需要将新增元素添加上
+            for (let i = toBePatched - 1; i >= 0; i--) {
+                const currentIndex = s2 + i
+                const child = c2[currentIndex]
+
+                const anchor =
+                    currentIndex + 1 < c2.length
+                        ? c2[currentIndex + 1].el
+                        : null
+                if (seq[i] == 0) {
+                    patch(null, child, el, anchor)
+                } else {
+                    if (i !== incr[j]) {
+                        hostInsert(child.el, el, anchor)
+                    } else {
+                        j--
+                    }
+                }
             }
         }
     }
