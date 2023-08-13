@@ -1,6 +1,7 @@
 import { isString, ShapeFlags } from '@vue/shared'
 
 export const Text = Symbol('Text')
+export const Fragment = Symbol('Fragment')
 
 export function isVNode(value) {
     return !!value.__v_isVNode // 用来判断是否是虚拟节点

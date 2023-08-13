@@ -1,5 +1,5 @@
 import { ShapeFlags, isNumber, isString } from '@vue/shared'
-import { Text, createVNode } from './createVNode'
+import { Fragment, Text, createVNode } from './createVNode'
 import { getSequence } from './sequence'
 
 export function isSameVnode(v1, v2) {
@@ -268,8 +268,21 @@ export function createRenderer(options) {
         }
     }
 
-    function unmount(n1) {
-        hostRemove(n1.el)
+    const processFragment = (n1, n2, el) => {
+        if (n1 == null) {
+            mountChildren(n2.children, el)
+        } else {
+            patchKeydChildren(n1.children, n2.children, el)
+        }
+    }
+
+    function unmount(vnode) {
+        const { shapeFlag, type, children } = vnode
+
+        if (type === Fragment) {
+            return unmountChildren(children)
+        }
+        hostRemove(vnode.el)
     }
 
     function patch(n1, n2, container, anchor = null) {
@@ -286,8 +299,8 @@ export function createRenderer(options) {
             case Text:
                 processText(n1, n2, container)
                 break
-            // case Fragment:
-            //   processFragment(n1, n2, container);
+            case Fragment:
+                processFragment(n1, n2, container)
             default:
                 if (shapeFlag & ShapeFlags.ELEMENT) {
                     // 元素的处理
