@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script src="./runtime-dom.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+
+        <script type="module">
+            const { createVNode, h, createRenderer, render } = vueRuntimeDom
+
+            const VueComponent = {
+                data() {
+                    return {
+                        name: 'luo',
+                    }
+                },
+                render() {
+                    return h(
+                        'button',
+                        {
+                            onClick: () => {
+                                this.name = 'tian'
+                            },
+                        },
+                        h('span', this.name)
+                    )
+                },
+            }
+
+            render(h(VueComponent), app)
+        </script>
+    </body>
+</html>

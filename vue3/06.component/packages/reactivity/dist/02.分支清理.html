@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="./reactivity.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+        <div id="app"></div>
+        <script>
+            const { effect, reactive } = VueReactivity
+
+            const state = reactive({ flag: true, name: 'jw', age: 30 })
+
+            // effect返回runner是让用户可以自己控制渲染逻辑
+            const runner = effect(() => {
+                document.body.innerHTML = state.flag ? state.name : state.age
+            })
+
+            // runner.effect.stop()
+
+            setTimeout(() => {
+                state.flag = false
+                // runner()
+
+                // setTimeout(() => {
+                //     console.log('修改name，原则上不更新')
+                //     state.name = 'zf'
+                // }, 1000)
+            }, 500)
+        </script>
+    </body>
+</html>

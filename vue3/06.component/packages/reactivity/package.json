@@ -1,0 +1,17 @@
+{
+    "name": "@vue/reactivity",
+    "version": "1.0.0",
+    "description": "",
+    "unpkg": "dist/reactivity.global.js",
+    "main": "dist/reactivity.cjs.js",
+    "module": "dist/reactivity.esm-bunlder.js",
+    "buildOptions": {
+        "name": "VueReactivity"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}

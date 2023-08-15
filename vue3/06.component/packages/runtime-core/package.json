@@ -1,0 +1,19 @@
+{
+    "name": "@vue/runtime-core",
+    "version": "1.0.0",
+    "description": "",
+    "main": "dist/runtime-core.cjs.js",
+    "module": "dist/runtime-core.esm-bunlder.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "buildOptions": {
+        "name": "vueRuntimeCore"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@vue/shared": "workspace:^1.0.0"
+    }
+}
