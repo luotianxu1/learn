@@ -278,6 +278,59 @@ export function createRenderer(options) {
         }
     }
 
+    const hasChanged = (oldProps = {}, newProps = {}) => {
+        // 直接看数量、数量后变化 就不用遍历了
+        let oldKeys = Object.keys(oldProps)
+        let newKeys = Object.keys(newProps)
+        if (oldKeys.length !== newKeys.length) {
+            return true
+        }
+        for (let i = 0; i < newKeys.length; i++) {
+            const key = newKeys[i]
+            if (newProps[key] !== oldProps[key]) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function shouldComponentUpdate(n1, n2) {
+        const prevProps = n1.props
+        const nextProps = n2.props
+
+        if (prevProps == nextProps) return false
+
+        return hasChanged(prevProps, nextProps)
+    }
+
+    function updateProps(instance, prevProps, nextProps) {
+        if (hasChanged(prevProps, nextProps)) {
+            for (let key in nextProps) {
+                instance.props[key] = nextProps[key]
+            }
+            for (let key in instance.props) {
+                if (!(key in nextProps)) {
+                    delete instance.props[key]
+                }
+            }
+        }
+    }
+
+    const updateComponent = (n1, n2, el, anchor) => {
+        // 这里我们 属性发生了变化 会执行到这里
+        // 插槽更新也会执行这里
+        const instance = (n2.component = n1.component)
+        // 内部props是响应式的所以更新 props就能自动更新视图  vue2就是这样搞的
+        // instance.props.message = n2.props.message;
+
+        // 这里我们可以比较熟悉，如果属性发生变化了，我们调用instance.update 来处理更新逻辑，统一更新的入口
+
+        if (shouldComponentUpdate(n1, n2)) {
+            instance.next = n2 // 暂存新的虚拟节点
+            instance.update()
+        }
+    }
+
     function unmount(vnode) {
         const { shapeFlag, type, children } = vnode
 
@@ -286,17 +339,28 @@ export function createRenderer(options) {
         }
         hostRemove(vnode.el)
     }
+    // 在渲染前记得要更新变化的属性
+    function updateComponentPreRender(instance, next) {
+        instance.next = null
+        instance.vnode = next // 更新虚拟节点
+        updateProps(instance, instance.props, next.props)
+    }
     function setupRendererEffect(instance, container, anchor) {
         const componentUpdate = () => {
             const { render, data } = instance
             if (!instance.isMounted) {
                 // 这里调用render会依赖收集 稍后数据变化了 会重新调用
-                const subTree = render.call(data)
+                const subTree = render.call(instance.proxy)
                 patch(null, subTree, container, anchor)
                 instance.subTree = subTree // 记录第一次的subTree
                 instance.isMounted = true
             } else {
-                const subTree = render.call(data)
+                let next = instance.next
+                if (next) {
+                    updateComponentPreRender(instance, next)
+                }
+
+                const subTree = render.call(instance.proxy)
                 patch(instance.subTree, subTree, container, anchor)
                 instance.subTree = subTree
             }
@@ -319,7 +383,7 @@ export function createRenderer(options) {
         if (n1 == null) {
             mountComponent(n2, el, anchor)
         } else {
-            //   updateComponent(n1, n2, el, anchor); // 组件的属性变化了,或者插槽变化了
+            updateComponent(n1, n2, el, anchor) // 组件的属性变化了,或者插槽变化了
         }
     }
 

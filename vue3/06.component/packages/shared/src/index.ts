@@ -16,4 +16,7 @@ export function isNumber(value) {
     return typeof value === 'number'
 }
 
+const hasOwnProperty = Object.prototype.hasOwnProperty
+export const hasOwn = (obj, key) => hasOwnProperty.call(obj, key)
+
 export * from './shapeFlag'
