@@ -3,6 +3,7 @@ import { Fragment, Text, createVNode } from './createVNode'
 import { getSequence } from './sequence'
 import { createComponentInstance, setupComponent } from './component'
 import { reactive, ReactiveEffect } from '@vue/reactivity'
+import { queueJob } from './scheduler'
 
 export function isSameVnode(v1, v2) {
     return v1.type === v2.type && v1.key === v2.key
@@ -365,7 +366,9 @@ export function createRenderer(options) {
                 instance.subTree = subTree
             }
         }
-        const effect = new ReactiveEffect(componentUpdate)
+        const effect = new ReactiveEffect(componentUpdate, () =>
+            queueJob(instance.update)
+        )
         let update = (instance.update = effect.run.bind(effect))
         update()
     }

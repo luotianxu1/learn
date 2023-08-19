@@ -26,7 +26,7 @@ export function createVNode(type, props = null, children = null) {
         el: null, // 虚拟节点对应的真实节点
         shapeFlag,
     }
-    if (children) {
+    if (children != undefined) {
         let type = 0
         if (Array.isArray(children)) {
             // 自己是元素，儿子是数组

@@ -1,4 +1,4 @@
-import { hasOwn, isFunction } from '@vue/shared'
+import { hasOwn, isFunction, isObject } from '@vue/shared'
 import { proxyRefs, reactive } from '@vue/reactivity'
 
 export function createComponentInstance(vnode) {
@@ -11,9 +11,9 @@ export function createComponentInstance(vnode) {
         attrs: {}, // 用户没有接收到属性
         props: {}, // 用户接收的属性
         propsOptions: vnode.type.props || {}, // 组件中接受的属性
-        proxy: null,
+        proxy: null, // 代理对象
         render: null,
-        setupState: {},
+        setupState: {}, // 返回的是对象则要给这个对象赋值
         exposed: {},
     } // 此实例就是用来继续组件的属性的，相关信息的
     return instance
@@ -47,6 +47,8 @@ const instanceProxy = {
         const { data, props, setupState } = target
         if (data && hasOwn(data, key)) {
             return data[key]
+        } else if (setupState && hasOwn(setupState, key)) {
+            return setupState[key]
         } else if (props && hasOwn(props, key)) {
             return props[key]
         }
@@ -57,6 +59,8 @@ const instanceProxy = {
         const { data, props, setupState } = target
         if (data && hasOwn(data, key)) {
             data[key] = value
+        } else if (setupState && hasOwn(setupState, key)) {
+            setupState[key] = value
         } else if (props && hasOwn(props, key)) {
             console.warn('props not update')
             return false
@@ -80,5 +84,33 @@ export function setupComponent(instance) {
         // 给实例赋予data
         instance.data = reactive(data.call(instance.proxy))
     }
-    instance.render = render
+
+    if (setup) {
+        const context = {
+            emit: (eventName, ...args) => {
+                const name = `on${eventName[0].toUpperCase()}${eventName.slice(
+                    1
+                )}`
+                let invoker = instance.vnode.props[name]
+                invoker && invoker(...args)
+            },
+            attrs: instance.attrs,
+        }
+        // setup在执行的时候有2个参数
+        const setupResult = setup(instance.props, context)
+        if (isFunction(setupResult)) {
+            // 如果setup返回的是setup
+            instance.render = setupResult
+        } else if (isObject(setupResult)) {
+            // 是数据
+            instance.setupState = proxyRefs(setupResult) // 可与在去值的时候自动.value
+        }
+    }
+
+    if (!instance.render) {
+        if (render) {
+            instance.render = render
+        }
+    }
+    // 最终一定要获取到对应的render函数
 }

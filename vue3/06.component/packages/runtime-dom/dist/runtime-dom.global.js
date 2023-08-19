@@ -180,7 +180,7 @@ var vueRuntimeDom = (() => {
       el: null,
       shapeFlag
     };
-    if (children) {
+    if (children != void 0) {
       let type2 = 0;
       if (Array.isArray(children)) {
         type2 = 16 /* ARRAY_CHILDREN */;
@@ -583,6 +583,8 @@ var vueRuntimeDom = (() => {
       const { data, props, setupState } = target;
       if (data && hasOwn(data, key)) {
         return data[key];
+      } else if (setupState && hasOwn(setupState, key)) {
+        return setupState[key];
       } else if (props && hasOwn(props, key)) {
         return props[key];
       }
@@ -593,6 +595,8 @@ var vueRuntimeDom = (() => {
       const { data, props, setupState } = target;
       if (data && hasOwn(data, key)) {
         data[key] = value;
+      } else if (setupState && hasOwn(setupState, key)) {
+        setupState[key] = value;
       } else if (props && hasOwn(props, key)) {
         console.warn("props not update");
         return false;
@@ -611,7 +615,52 @@ var vueRuntimeDom = (() => {
       }
       instance.data = reactive(data.call(instance.proxy));
     }
-    instance.render = render2;
+    if (setup) {
+      const context = {
+        emit: (eventName, ...args) => {
+          const name = `on${eventName[0].toUpperCase()}${eventName.slice(
+            1
+          )}`;
+          let invoker = instance.vnode.props[name];
+          invoker && invoker(...args);
+        },
+        attrs: instance.attrs
+      };
+      const setupResult = setup(instance.props, context);
+      if (isFunction(setupResult)) {
+        instance.render = setupResult;
+      } else if (isObject(setupResult)) {
+        instance.setupState = proxyRefs(setupResult);
+      }
+    }
+    if (!instance.render) {
+      if (render2) {
+        instance.render = render2;
+      }
+    }
+  }
+
+  // packages/runtime-core/src/scheduler.ts
+  var queue = [];
+  var isFlushing = false;
+  var resolvePromise = Promise.resolve();
+  function queueJob(job) {
+    if (!queue.includes(job)) {
+      queue.push(job);
+    }
+    if (!isFlushing) {
+      isFlushing = true;
+      resolvePromise.then(() => {
+        isFlushing = false;
+        let copyQueue = queue.slice(0);
+        queue.length = 0;
+        for (let i = 0; i < copyQueue.length; i++) {
+          let job2 = copyQueue[i];
+          job2();
+        }
+        copyQueue.length = 0;
+      });
+    }
   }
 
   // packages/runtime-core/src/renderer.ts
@@ -886,7 +935,10 @@ var vueRuntimeDom = (() => {
           instance.subTree = subTree;
         }
       };
-      const effect2 = new ReactiveEffect(componentUpdate);
+      const effect2 = new ReactiveEffect(
+        componentUpdate,
+        () => queueJob(instance.update)
+      );
       let update = instance.update = effect2.run.bind(effect2);
       update();
     }
