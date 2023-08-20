@@ -1,6 +1,14 @@
 import { ShapeFlags, hasOwn, isFunction, isObject } from '@vue/shared'
 import { proxyRefs, reactive } from '@vue/reactivity'
 
+export let instance = null
+
+export function setCurrentInstance(i) {
+    instance = i
+}
+
+export const getCurrentInstance = () => instance
+
 export function createComponentInstance(vnode) {
     const instance = {
         state: {},
@@ -109,8 +117,10 @@ export function setupComponent(instance) {
                 instance.exposed = exposed || {}
             },
         }
+        setCurrentInstance(instance)
         // setup在执行的时候有2个参数
         const setupResult = setup(instance.props, context)
+        setCurrentInstance(null)
         if (isFunction(setupResult)) {
             // 如果setup返回的是setup
             instance.render = setupResult

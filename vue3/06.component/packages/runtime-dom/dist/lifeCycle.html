@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script src="./runtime-dom.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+
+        <script type="module">
+            const {
+                createVNode,
+                h,
+                createRenderer,
+                render,
+                Fragment,
+                Text,
+                ref,
+                reactive,
+                toRefs,
+                getCurrentInstance,
+                onBeforeMount,
+                onMounted,
+                onBeforeUpdate,
+                onUpdated,
+                onBeforeUnmount,
+                onUnmounted,
+            } = vueRuntimeDom
+
+            const VueComponent = {
+                setup() {
+                    onBeforeMount(() => {
+                        console.log('beforeMount')
+                    })
+                    onMounted(() => {
+                        console.log('onMounted')
+                    })
+                    onBeforeUpdate(() => {
+                        console.log('beforeUpdate')
+                    })
+                    onUpdated(() => {
+                        console.log('updated')
+                    })
+                    onBeforeUnmount(() => {
+                        console.log('onBeforeUnmout')
+                    })
+                    onUnmounted(() => {
+                        console.log('onUnmounted')
+                    })
+                },
+                render() {
+                    return h('div', 'hello')
+                },
+            }
+
+            render(h(VueComponent), app)
+        </script>
+    </body>
+</html>

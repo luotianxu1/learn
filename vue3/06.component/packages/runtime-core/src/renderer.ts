@@ -1,4 +1,4 @@
-import { ShapeFlags, isNumber, isString } from '@vue/shared'
+import { ShapeFlags, invokerFns, isNumber, isString } from '@vue/shared'
 import { Fragment, Text, createVNode } from './createVNode'
 import { getSequence } from './sequence'
 import { createComponentInstance, setupComponent } from './component'
@@ -350,11 +350,19 @@ export function createRenderer(options) {
         const componentUpdate = () => {
             const { render, data } = instance
             if (!instance.isMounted) {
+                let { bm, m, vnode } = instance
+                if (bm) {
+                    invokerFns(bm)
+                }
+
                 // 这里调用render会依赖收集 稍后数据变化了 会重新调用
                 const subTree = render.call(instance.proxy)
                 patch(null, subTree, container, anchor)
                 instance.subTree = subTree // 记录第一次的subTree
                 instance.isMounted = true
+                if (m) {
+                    invokerFns(m)
+                }
             } else {
                 let next = instance.next
                 if (next) {
@@ -363,6 +371,9 @@ export function createRenderer(options) {
 
                 const subTree = render.call(instance.proxy)
                 patch(instance.subTree, subTree, container, anchor)
+                if (instance.u) {
+                    invokerFns(instance.u)
+                }
                 instance.subTree = subTree
             }
         }
