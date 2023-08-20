@@ -31,6 +31,8 @@ export function createVNode(type, props = null, children = null) {
         if (Array.isArray(children)) {
             // 自己是元素，儿子是数组
             type = ShapeFlags.ARRAY_CHILDREN
+        } else if (isObject(children)) {
+            type = ShapeFlags.SLOTS_CHILDREN
         } else {
             vnode.children = String(children)
             type = ShapeFlags.TEXT_CHILDREN

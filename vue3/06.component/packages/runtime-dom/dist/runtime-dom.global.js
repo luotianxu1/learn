@@ -184,6 +184,8 @@ var vueRuntimeDom = (() => {
       let type2 = 0;
       if (Array.isArray(children)) {
         type2 = 16 /* ARRAY_CHILDREN */;
+      } else if (isObject(children)) {
+        type2 = 32 /* SLOTS_CHILDREN */;
       } else {
         vnode.children = String(children);
         type2 = 8 /* TEXT_CHILDREN */;
@@ -554,7 +556,8 @@ var vueRuntimeDom = (() => {
       proxy: null,
       render: null,
       setupState: {},
-      exposed: {}
+      exposed: {},
+      slots: {}
     };
     return instance;
   }
@@ -576,7 +579,8 @@ var vueRuntimeDom = (() => {
     instance.props = reactive(props);
   }
   var publicProperties = {
-    $attrs: (i) => i.attrs
+    $attrs: (i) => i.attrs,
+    $slots: (i) => i.slots
   };
   var instanceProxy = {
     get(target, key, receiver) {
@@ -604,10 +608,16 @@ var vueRuntimeDom = (() => {
       return true;
     }
   };
+  function initSlots(instance, children) {
+    if (instance.vnode.shapeFlag & 32 /* SLOTS_CHILDREN */) {
+      instance.slots = children;
+    }
+  }
   function setupComponent(instance) {
-    const { props, type } = instance.vnode;
+    const { props, type, children } = instance.vnode;
     let { data, setup, render: render2 } = type;
     initProps(instance, props);
+    initSlots(instance, children);
     instance.proxy = new Proxy(instance, instanceProxy);
     if (data) {
       if (!isFunction(data)) {
@@ -624,7 +634,11 @@ var vueRuntimeDom = (() => {
           let invoker = instance.vnode.props[name];
           invoker && invoker(...args);
         },
-        attrs: instance.attrs
+        attrs: instance.attrs,
+        slots: instance.slots,
+        exposed: (exposed) => {
+          instance.exposed = exposed || {};
+        }
       };
       const setupResult = setup(instance.props, context);
       if (isFunction(setupResult)) {

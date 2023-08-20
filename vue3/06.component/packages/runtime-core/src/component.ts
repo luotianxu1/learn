@@ -1,4 +1,4 @@
-import { hasOwn, isFunction, isObject } from '@vue/shared'
+import { ShapeFlags, hasOwn, isFunction, isObject } from '@vue/shared'
 import { proxyRefs, reactive } from '@vue/reactivity'
 
 export function createComponentInstance(vnode) {
@@ -15,6 +15,7 @@ export function createComponentInstance(vnode) {
         render: null,
         setupState: {}, // 返回的是对象则要给这个对象赋值
         exposed: {},
+        slots: {}, // 存放所有插槽信息
     } // 此实例就是用来继续组件的属性的，相关信息的
     return instance
 }
@@ -40,6 +41,7 @@ function initProps(instance, userProps) {
 
 const publicProperties = {
     $attrs: (i) => i.attrs, // proxy.$attrs().c
+    $slots: (i) => i.slots,
 }
 
 const instanceProxy = {
@@ -69,11 +71,18 @@ const instanceProxy = {
     },
 }
 
+function initSlots(instance, children) {
+    if (instance.vnode.shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
+        instance.slots = children // 将用户的children映射到实例上
+    }
+}
+
 export function setupComponent(instance) {
-    const { props, type } = instance.vnode // 组件的虚拟节点
+    const { props, type, children } = instance.vnode // 组件的虚拟节点
     let { data, setup, render } = type
 
     initProps(instance, props)
+    initSlots(instance, children)
 
     instance.proxy = new Proxy(instance, instanceProxy)
 
@@ -95,6 +104,10 @@ export function setupComponent(instance) {
                 invoker && invoker(...args)
             },
             attrs: instance.attrs,
+            slots: instance.slots,
+            exposed: (exposed) => {
+                instance.exposed = exposed || {}
+            },
         }
         // setup在执行的时候有2个参数
         const setupResult = setup(instance.props, context)
