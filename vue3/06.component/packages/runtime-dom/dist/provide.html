@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script src="./runtime-dom.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+
+        <script type="module">
+            const {
+                createVNode,
+                h,
+                createRenderer,
+                render,
+                Fragment,
+                Text,
+                ref,
+                reactive,
+                toRefs,
+                getCurrentInstance,
+                onBeforeMount,
+                onMounted,
+                onBeforeUpdate,
+                onUpdated,
+                onBeforeUnmount,
+                onUnmounted,
+                provide,
+                inject,
+            } = vueRuntimeDom
+
+            const ChildComponent = {
+                setup() {
+                    const state = inject('state')
+                    return () => {
+                        return h(Text, state.name + state.age)
+                    }
+                },
+            }
+
+            const VueComponent = {
+                setup() {
+                    const state = reactive({ name: 'luo', age: 13 })
+
+                    provide('state', state)
+
+                    setTimeout(() => {
+                        state.name = 'tian'
+                    }, 1000)
+
+                    return () => {
+                        return h(ChildComponent)
+                    }
+                },
+            }
+
+            render(h(VueComponent), app)
+        </script>
+    </body>
+</html>

@@ -9,7 +9,7 @@ export function setCurrentInstance(i) {
 
 export const getCurrentInstance = () => instance
 
-export function createComponentInstance(vnode) {
+export function createComponentInstance(vnode, parent) {
     const instance = {
         state: {},
         isMounted: false, // 默认组件没有初始化，初始化后会将此属性isMounted true
@@ -24,6 +24,8 @@ export function createComponentInstance(vnode) {
         setupState: {}, // 返回的是对象则要给这个对象赋值
         exposed: {},
         slots: {}, // 存放所有插槽信息
+        parent, // 标记当前组件的父亲
+        provides: parent ? parent.provides : Object.create(null),
     } // 此实例就是用来继续组件的属性的，相关信息的
     return instance
 }
