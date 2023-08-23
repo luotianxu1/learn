@@ -27,6 +27,7 @@ var vueRuntimeDom = (() => {
     computed: () => computed,
     createRenderer: () => createRenderer,
     createVNode: () => createVNode,
+    defineAsyncComponent: () => defineAsyncComponent,
     effect: () => effect,
     getCurrentInstance: () => getCurrentInstance,
     h: () => h,
@@ -945,9 +946,16 @@ var vueRuntimeDom = (() => {
       }
     };
     function unmount(vnode, parent = null) {
-      const { shapeFlag, type, children } = vnode;
+      const { shapeFlag, type, children, component } = vnode;
       if (type === Fragment) {
         return unmountChildren(children, parent);
+      }
+      if (shapeFlag & 6 /* COMPONENT */) {
+        let { subTree, bum, um } = vnode.component;
+        bum && invokerFns(bum);
+        unmount(subTree, parent);
+        um && invokerFns(um);
+        return;
       }
       hostRemove(vnode.el);
     }
@@ -1092,6 +1100,76 @@ var vueRuntimeDom = (() => {
       return defaultVal;
     }
   };
+
+  // packages/runtime-core/src/defineAsyncComponent.ts
+  function defineAsyncComponent(loaderOPtions) {
+    if (typeof loaderOPtions == "function") {
+      loaderOPtions = {
+        loader: loaderOPtions
+      };
+    }
+    let Component = null;
+    return {
+      setup() {
+        const {
+          loader,
+          timeout,
+          errorComponent,
+          delay,
+          loadingComponent,
+          onError
+        } = loaderOPtions;
+        const loaded = ref(false);
+        const error = ref(false);
+        const loading = ref(false);
+        if (timeout) {
+          setTimeout(() => {
+            error.value = true;
+          }, timeout);
+        }
+        if (delay) {
+          setTimeout(() => {
+            loading.value = true;
+          }, timeout);
+        } else {
+          loading.value = true;
+        }
+        function load() {
+          return loader().catch((err) => {
+            if (onError) {
+              return new Promise((resolve, reject) => {
+                const retry = () => resolve(load());
+                const fail = (err2) => {
+                  reject(err2);
+                };
+                onError(err, retry, fail, ++attempts);
+              });
+            }
+          });
+        }
+        let attempts = 0;
+        load().then((v) => {
+          loaded.value = true;
+          Component = v;
+        }).catch((err) => {
+          error.value = true;
+        }).finally(() => {
+          loading.value = false;
+        });
+        return () => {
+          if (loaded.value) {
+            return h(Component);
+          } else if (error.value && errorComponent) {
+            return h(errorComponent);
+          } else if (loading.value && loadingComponent) {
+            return h(loadingComponent);
+          } else {
+            return h(Fragment, []);
+          }
+        };
+      }
+    };
+  }
 
   // packages/runtime-dom/src/index.ts
   var renderOptions = Object.assign(nodeOps, { patchProp });

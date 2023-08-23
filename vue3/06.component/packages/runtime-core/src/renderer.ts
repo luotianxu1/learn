@@ -333,10 +333,17 @@ export function createRenderer(options) {
     }
 
     function unmount(vnode, parent = null) {
-        const { shapeFlag, type, children } = vnode
+        const { shapeFlag, type, children, component } = vnode
 
         if (type === Fragment) {
             return unmountChildren(children, parent)
+        }
+        if (shapeFlag & ShapeFlags.COMPONENT) {
+            let { subTree, bum, um } = vnode.component
+            bum && invokerFns(bum)
+            unmount(subTree, parent) // 卸载返回值的对应的dom，返回值可能是一个fragment
+            um && invokerFns(um)
+            return
         }
         hostRemove(vnode.el)
     }

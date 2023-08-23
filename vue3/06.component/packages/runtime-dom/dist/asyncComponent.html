@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script src="./runtime-dom.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+
+        <script type="module">
+            const {
+                createVNode,
+                h,
+                createRenderer,
+                render,
+                Fragment,
+                Text,
+                ref,
+                reactive,
+                toRefs,
+                getCurrentInstance,
+                onBeforeMount,
+                onMounted,
+                onBeforeUpdate,
+                onUpdated,
+                onBeforeUnmount,
+                onUnmounted,
+                provide,
+                inject,
+                defineAsyncComponent,
+            } = vueRuntimeDom
+
+            const requestComponent = {
+                render() {
+                    return h('div', 'hello world')
+                },
+            }
+            const loadingComponent = {
+                render() {
+                    return h(Text, 'loading....')
+                },
+            }
+            const errorComponent = {
+                render() {
+                    return h(Text, 'fail....')
+                },
+            }
+            const myAsyncComponent = defineAsyncComponent({
+                loader: () => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            if (Math.random() > 0.5) {
+                                reject(requestComponent)
+                            } else {
+                                resolve(requestComponent)
+                            }
+                        }, 2000)
+                    })
+                },
+                loadingComponent,
+                delay: 200, // 200ms 后显示loading
+                errorComponent,
+                onError: (error, retry, fail, attemps) => {
+                    console.log(error, attemps)
+                    retry()
+                },
+                // timeout: 1000
+            })
+            render(h(myAsyncComponent), app)
+        </script>
+    </body>
+</html>

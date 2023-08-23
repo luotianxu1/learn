@@ -1,7 +1,7 @@
 import { isObject } from '@vue/shared'
 import { createVNode, isVNode } from './createVNode'
 
-export function h(type, propsOrChildren, children) {
+export function h(type, propsOrChildren?, children?) {
     // h方法如果参数为两个的情况 1）元素+属性 2）元素+儿子
     const l = arguments.length
     if (l === 2) {
