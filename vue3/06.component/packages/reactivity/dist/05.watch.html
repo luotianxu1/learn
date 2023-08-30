@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="./reactivity.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+        <div id="app"></div>
+        <script>
+            const { effect, reactive, computed, watch } = VueReactivity
+
+            const state = reactive({
+                firstName: 'luo',
+                age: 14,
+            })
+
+            // vue3中如果监控的是一个对象，无法拿到新值和老值
+            // vue3中watch监控的是一个对象的时候默认会深度监听
+            // 如果监控的是某个属性的话，需要写成函数的模式
+            // 尽量不要采用直接放一个对象的方式，默认会递归访问对象的属性，所以不建议用
+            watch(state, (newVal, oldVal) => {
+                console.log(newVal, oldVal)
+            })
+
+            setTimeout(() => {
+                state.age++
+            })
+        </script>
+    </body>
+</html>

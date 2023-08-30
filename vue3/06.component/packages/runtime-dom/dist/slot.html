@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script src="./runtime-dom.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+
+        <script type="module">
+            const {
+                createVNode,
+                h,
+                createRenderer,
+                render,
+                Fragment,
+                Text,
+                ref,
+                reactive,
+                toRefs,
+            } = vueRuntimeDom
+
+            const MyComponent = {
+                setup(props, { attrs, emit, slots, expose }) {
+                    expose({
+                        a: 1,
+                        b: 2,
+                    })
+                    return () => {
+                        return h(Fragment, [
+                            h('div', slots.default()),
+                            h('div', slots.header()),
+                            h('div', slots.footer()),
+                        ])
+                    }
+                },
+            }
+
+            const VueComponent = {
+                render() {
+                    return h(
+                        'div',
+                        h(MyComponent, null, {
+                            default: () => {
+                                return h('div', 'default')
+                            },
+                            header: () => {
+                                return h('a', 'hello')
+                            },
+                            footer: () => {
+                                return h('a', 'luo')
+                            },
+                        })
+                    )
+                },
+            }
+
+            render(h(VueComponent), app)
+        </script>
+    </body>
+</html>

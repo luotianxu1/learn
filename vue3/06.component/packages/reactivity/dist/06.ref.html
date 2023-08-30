@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="./reactivity.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+        <div id="app"></div>
+        <script>
+            const { effect, reactive, computed, watch, ref } = VueReactivity
+
+            const state = reactive({ name: 'luo', age: 14 })
+
+            let flag = ref(false)
+            effect(() => {
+                app.innerHTML = flag.value
+            })
+
+            setTimeout(() => {
+                flag.value = true
+            }, 1000)
+        </script>
+    </body>
+</html>

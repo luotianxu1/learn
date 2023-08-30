@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script src="./runtime-dom.global.js"></script>
+        <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+
+        <script type="module">
+            const {
+                createVNode,
+                h,
+                createRenderer,
+                render,
+                Fragment,
+                Text,
+                ref,
+                reactive,
+                toRefs,
+            } = vueRuntimeDom
+
+            function useCount() {
+                const state = reactive({ count: 0 })
+                const handleClick = () => {
+                    state.count++
+                }
+                return {
+                    state,
+                    handleClick,
+                }
+            }
+
+            const VueComponent = {
+                // data() {
+                //     return {
+                //     }
+                // },
+                setup() {
+                    let { state, handleClick } = useCount()
+                    return {
+                        ...toRefs(state),
+                        handleClick,
+                    }
+                    // return function render() {
+                    //     return h('h1', 'hello')
+                    // }
+                },
+                render() {
+                    console.log('render')
+                    return h('div', [
+                        h(
+                            'button',
+                            {
+                                onClick: () => {
+                                    this.handleClick()
+                                },
+                            },
+                            '增加'
+                        ),
+                        h(Text, null, this.count),
+                    ])
+                },
+            }
+
+            render(h(VueComponent), app)
+
+            // 属性的变化，要到值页面重新渲染
+        </script>
+    </body>
+</html>
