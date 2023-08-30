@@ -20,6 +20,7 @@ class Observer {
         data.forEach((item) => observe(item))
     }
     walk(data) {
+        // 对象上的所有属性依次进行观测
         Object.keys(data).forEach((key) => {
             defineReactive(data, key, data[key])
         })
@@ -27,7 +28,7 @@ class Observer {
 }
 
 function defineReactive(data, key, value) {
-    observe(value) // 本身用户默认值是对象套对象 需要递归处理
+    observe(value) // 本身用户默认值是对象套对象 需要递归处理 如果Vue数据嵌套层级过深 >>性能会受影响
     Object.defineProperty(data, key, {
         get() {
             console.log('用户获取值了')

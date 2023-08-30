@@ -1,5 +1,8 @@
 // 拿到数组原型上的方法
 let oldArrayPrototype = Array.prototype
+
+// 然后将arrayMethods继承自数组原型
+// 这里是面向切片编程思想（AOP）--不破坏封装的前提下，动态的扩展功能
 export let arrayMethods = Object.create(oldArrayPrototype)
 
 let methods = ['push', 'shift', 'unshift', 'pop', 'reverse', 'sort', 'splice']

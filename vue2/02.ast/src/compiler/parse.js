@@ -46,7 +46,9 @@ export function parseHTML(html) {
         }
     }
 
+    // 对文本进行处理
     function charts(text) {
+        // 去掉空格
         text = text.replace(/\s/g, '')
         if (text) {
             currentParent.children.push({

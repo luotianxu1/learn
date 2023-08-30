@@ -24,9 +24,11 @@ export function initMixin(Vue) {
         el = document.querySelector(el)
         vm.$el = el
 
+        // 如果不存在render属性
         if (!options.render) {
             //没有render 将template转换成render方法
             let template = options.template
+            // 如果不存在render和template 但是存在el属性 直接将模板赋值到el所在的外层html结构（就是el本身 并不是父元素）
             if (!template && el) {
                 template = el.outerHTML
             }
