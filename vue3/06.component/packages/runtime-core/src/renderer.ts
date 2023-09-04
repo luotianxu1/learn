@@ -296,23 +296,25 @@ export function createRenderer(options) {
     }
 
     function shouldComponentUpdate(n1, n2) {
-        const prevProps = n1.props
-        const nextProps = n2.props
+        const oldProps = n1.props
+        const newProps = n2.props
 
-        if (prevProps == nextProps) return false
+        // 如果组件有插槽也需要更新
+        if (n1.children || n2.children) return true // 遇到插槽 前后不一致就要重新渲染
 
-        return hasChanged(prevProps, nextProps)
+        if (oldProps == newProps) return false
+        return hasChanged(oldProps, newProps)
     }
 
-    function updateProps(instance, prevProps, nextProps) {
-        if (hasChanged(prevProps, nextProps)) {
-            for (let key in nextProps) {
-                instance.props[key] = nextProps[key]
-            }
-            for (let key in instance.props) {
-                if (!(key in nextProps)) {
-                    delete instance.props[key]
-                }
+    function updateProps(instance, nextProps) {
+        // 应该考虑一下 attrs 和 props
+        let prevProps = instance.props
+        for (let key in nextProps) {
+            prevProps[key] = nextProps[key]
+        }
+        for (let key in prevProps) {
+            if (!(key in nextProps)) {
+                delete prevProps[key]
             }
         }
     }
@@ -351,7 +353,9 @@ export function createRenderer(options) {
     function updateComponentPreRender(instance, next) {
         instance.next = null
         instance.vnode = next // 更新虚拟节点
-        updateProps(instance, instance.props, next.props)
+
+        updateProps(instance, next.props)
+        Object.assign(instance.slots, next.children) // 新的儿子
     }
     function setupRendererEffect(instance, container, anchor) {
         const componentUpdate = () => {
@@ -397,6 +401,15 @@ export function createRenderer(options) {
             vnode,
             parent
         ))
+        // 稍后渲染的时候用到的方法
+        instance.ctx.renderer = {
+            createElement: hostCreateElement, // 创建元素
+            // 移动dom
+            move(vnode, container) {
+                hostInsert(vnode.component.subTree.el, container)
+            },
+            unmount, // 卸载dom
+        }
         // 2、组件的插槽、处理组件的属性 给组件的实例赋值
         setupComponent(instance)
         // 3、给组件产生一个effect。这样可以组件数据变化后重新渲染

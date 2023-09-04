@@ -21,6 +21,7 @@ var vueRuntimeDom = (() => {
   var src_exports = {};
   __export(src_exports, {
     Fragment: () => Fragment,
+    KeepAlive: () => KeepAlive,
     LifeCycle: () => LifeCycle,
     ReactiveEffect: () => ReactiveEffect,
     Text: () => Text,
@@ -567,6 +568,7 @@ var vueRuntimeDom = (() => {
   var getCurrentInstance = () => instance;
   function createComponentInstance(vnode, parent) {
     const instance2 = {
+      ctx: {},
       state: {},
       isMounted: false,
       subTree: null,
@@ -920,21 +922,22 @@ var vueRuntimeDom = (() => {
       return false;
     };
     function shouldComponentUpdate(n1, n2) {
-      const prevProps = n1.props;
-      const nextProps = n2.props;
-      if (prevProps == nextProps)
+      const oldProps = n1.props;
+      const newProps = n2.props;
+      if (n1.children || n2.children)
+        return true;
+      if (oldProps == newProps)
         return false;
-      return hasChanged(prevProps, nextProps);
+      return hasChanged(oldProps, newProps);
     }
-    function updateProps(instance2, prevProps, nextProps) {
-      if (hasChanged(prevProps, nextProps)) {
-        for (let key in nextProps) {
-          instance2.props[key] = nextProps[key];
-        }
-        for (let key in instance2.props) {
-          if (!(key in nextProps)) {
-            delete instance2.props[key];
-          }
+    function updateProps(instance2, nextProps) {
+      let prevProps = instance2.props;
+      for (let key in nextProps) {
+        prevProps[key] = nextProps[key];
+      }
+      for (let key in prevProps) {
+        if (!(key in nextProps)) {
+          delete prevProps[key];
         }
       }
     }
@@ -962,7 +965,8 @@ var vueRuntimeDom = (() => {
     function updateComponentPreRender(instance2, next) {
       instance2.next = null;
       instance2.vnode = next;
-      updateProps(instance2, instance2.props, next.props);
+      updateProps(instance2, next.props);
+      Object.assign(instance2.slots, next.children);
     }
     function setupRendererEffect(instance2, container, anchor) {
       const componentUpdate = () => {
@@ -1004,6 +1008,13 @@ var vueRuntimeDom = (() => {
         vnode,
         parent
       );
+      instance2.ctx.renderer = {
+        createElement: hostCreateElement,
+        move(vnode2, container2) {
+          hostInsert(vnode2.component.subTree.el, container2);
+        },
+        unmount
+      };
       setupComponent(instance2);
       setupRendererEffect(instance2, container, anchor);
     };
@@ -1170,6 +1181,35 @@ var vueRuntimeDom = (() => {
       }
     };
   }
+
+  // packages/runtime-core/src/keepAlive.ts
+  var KeepAlive = {
+    __iskeepAlive: true,
+    setup(props, { slots }) {
+      const keys = /* @__PURE__ */ new Set();
+      const cache = /* @__PURE__ */ new Map();
+      const instance2 = getCurrentInstance();
+      let pendingCacheKey = null;
+      onMounted(() => {
+        cache.set(pendingCacheKey, instance2.subTree);
+      });
+      return () => {
+        let vnode = slots.default();
+        if (!(vnode.shapeFlag && 4 /* STATEFUL_COMPONENT */)) {
+          return vnode;
+        }
+        let comp = vnode.type;
+        const key = vnode.key == null ? comp : vnode.key;
+        pendingCacheKey = key;
+        let cacheVnode = cache.get(key);
+        if (cacheVnode) {
+        } else {
+          keys.add(key);
+        }
+        return vnode;
+      };
+    }
+  };
 
   // packages/runtime-dom/src/index.ts
   var renderOptions = Object.assign(nodeOps, { patchProp });

@@ -11,6 +11,7 @@ export const getCurrentInstance = () => instance
 
 export function createComponentInstance(vnode, parent) {
     const instance = {
+        ctx: {} as any, //当前实例的上下文，用于存储信息
         state: {},
         isMounted: false, // 默认组件没有初始化，初始化后会将此属性isMounted true
         subTree: null, // 要渲染的子树的虚拟节点

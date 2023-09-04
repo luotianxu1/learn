@@ -7,3 +7,4 @@ export * from './apiInject'
 export { defineAsyncComponent } from './defineAsyncComponent'
 
 export * from '@vue/reactivity'
+export * from './keepAlive'
