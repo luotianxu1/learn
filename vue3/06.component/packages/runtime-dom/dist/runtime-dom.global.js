@@ -953,6 +953,10 @@ var vueRuntimeDom = (() => {
       if (type === Fragment) {
         return unmountChildren(children, parent);
       }
+      if (shapeFlag & 256 /* COMPONENT_SHOULD_KEEP_ALIVE */) {
+        parent.ctx.deactiveate(vnode);
+        return;
+      }
       if (shapeFlag & 6 /* COMPONENT */) {
         let { subTree, bum, um } = vnode.component;
         bum && invokerFns(bum);
@@ -1020,7 +1024,11 @@ var vueRuntimeDom = (() => {
     };
     const processComponent = (n1, n2, el, anchor, parent) => {
       if (n1 == null) {
-        mountComponent(n2, el, anchor, parent);
+        if (n2.shapeFlag & 512 /* COMPONENT_KEPT_ALIVE */) {
+          parent.ctx.active(n2, el, anchor);
+        } else {
+          mountComponent(n2, el, anchor, parent);
+        }
       } else {
         updateComponent(n1, n2, el, anchor);
       }
@@ -1189,10 +1197,20 @@ var vueRuntimeDom = (() => {
       const keys = /* @__PURE__ */ new Set();
       const cache = /* @__PURE__ */ new Map();
       const instance2 = getCurrentInstance();
+      let { move, createElement, unmount } = instance2.ctx.renderer;
+      let storageContainer = createElement("div");
+      instance2.ctx.active = (vnode, container, anchor) => {
+        move(vnode, container, anchor);
+      };
+      instance2.ctx.deactiveate = (vnode) => {
+        move(vnode, storageContainer);
+      };
       let pendingCacheKey = null;
-      onMounted(() => {
+      function cacheNode() {
         cache.set(pendingCacheKey, instance2.subTree);
-      });
+      }
+      onMounted(cacheNode);
+      onUpdated(cacheNode);
       return () => {
         let vnode = slots.default();
         if (!(vnode.shapeFlag && 4 /* STATEFUL_COMPONENT */)) {
@@ -1203,6 +1221,8 @@ var vueRuntimeDom = (() => {
         pendingCacheKey = key;
         let cacheVnode = cache.get(key);
         if (cacheVnode) {
+          vnode.component = cacheVnode.component;
+          vnode.shapeFlag |= 512 /* COMPONENT_KEPT_ALIVE */;
         } else {
           keys.add(key);
         }

@@ -340,6 +340,11 @@ export function createRenderer(options) {
         if (type === Fragment) {
             return unmountChildren(children, parent)
         }
+        if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
+            // 告诉keepAlive组件 我需要的是将真实节点移动到缓存中
+            parent.ctx.deactiveate(vnode)
+            return
+        }
         if (shapeFlag & ShapeFlags.COMPONENT) {
             let { subTree, bum, um } = vnode.component
             bum && invokerFns(bum)
@@ -418,7 +423,12 @@ export function createRenderer(options) {
 
     const processComponent = (n1, n2, el, anchor, parent) => {
         if (n1 == null) {
-            mountComponent(n2, el, anchor, parent)
+            if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+                // 组件缓存过了，不需要走挂载逻辑
+                parent.ctx.active(n2, el, anchor)
+            } else {
+                mountComponent(n2, el, anchor, parent)
+            }
         } else {
             updateComponent(n1, n2, el, anchor) // 组件的属性变化了,或者插槽变化了
         }
