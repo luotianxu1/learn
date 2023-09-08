@@ -47,24 +47,36 @@
             }
 
             render(
-                h(KeepAlive, null, {
-                    default: () => h(Component1),
-                }),
+                h(
+                    KeepAlive,
+                    { max: 1 },
+                    {
+                        default: () => h(Component1),
+                    }
+                ),
                 app
             )
             setTimeout(() => {
                 render(
-                    h(KeepAlive, null, {
-                        default: () => h(Component2),
-                    }),
+                    h(
+                        KeepAlive,
+                        { max: 1 },
+                        {
+                            default: () => h(Component2),
+                        }
+                    ),
                     app
                 )
             }, 1000)
             setTimeout(() => {
                 render(
-                    h(KeepAlive, null, {
-                        default: () => h(Component1),
-                    }),
+                    h(
+                        KeepAlive,
+                        { max: 1 },
+                        {
+                            default: () => h(Component1),
+                        }
+                    ),
                     app
                 )
             }, 3000)

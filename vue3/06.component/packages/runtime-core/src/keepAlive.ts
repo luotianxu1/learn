@@ -4,6 +4,9 @@ import { onMounted, onUpdated } from './apiLifeCycle'
 
 export const KeepAlive = {
     __iskeepAlive: true, // 自定义用来表示keep-alive组件
+    props: {
+        max: Number,
+    },
     setup(props, { slots }) {
         const keys = new Set() // 缓存组件的key
         const cache = new Map() // 映射表来缓存组件间的关系
@@ -30,6 +33,26 @@ export const KeepAlive = {
 
         onMounted(cacheNode)
         onUpdated(cacheNode)
+        function pruneCache(key) {
+            let cacheVnode = cache.get(key)
+            keys.delete(key)
+            cache.delete(key)
+
+            // 需要根据删除的key 来移除
+
+            if (cacheVnode) {
+                let shapeFlag = cacheVnode.shapeFlag
+                if (shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+                    shapeFlag -= ShapeFlags.COMPONENT_KEPT_ALIVE
+                }
+                if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
+                    shapeFlag -= ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE
+                }
+                cacheVnode.shapeFlag = shapeFlag
+                unmount(cacheVnode, storageContainer)
+                // 这里还需要将storageContainer中的节点删除
+            }
+        }
 
         return () => {
             let vnode = slots.default()
@@ -47,6 +70,11 @@ export const KeepAlive = {
                 vnode.shapeFlag |= ShapeFlags.COMPONENT_KEPT_ALIVE // 表示这个组件不应该走初始化了,应该走activated逻辑
             } else {
                 keys.add(key)
+
+                let { max } = props
+                if (max && keys.size > max) {
+                    pruneCache(keys.values().next().value)
+                }
             }
 
             return vnode

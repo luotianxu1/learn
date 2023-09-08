@@ -1193,6 +1193,9 @@ var vueRuntimeDom = (() => {
   // packages/runtime-core/src/keepAlive.ts
   var KeepAlive = {
     __iskeepAlive: true,
+    props: {
+      max: Number
+    },
     setup(props, { slots }) {
       const keys = /* @__PURE__ */ new Set();
       const cache = /* @__PURE__ */ new Map();
@@ -1211,6 +1214,22 @@ var vueRuntimeDom = (() => {
       }
       onMounted(cacheNode);
       onUpdated(cacheNode);
+      function pruneCache(key) {
+        let cacheVnode = cache.get(key);
+        keys.delete(key);
+        cache.delete(key);
+        if (cacheVnode) {
+          let shapeFlag = cacheVnode.shapeFlag;
+          if (shapeFlag & 512 /* COMPONENT_KEPT_ALIVE */) {
+            shapeFlag -= 512 /* COMPONENT_KEPT_ALIVE */;
+          }
+          if (shapeFlag & 256 /* COMPONENT_SHOULD_KEEP_ALIVE */) {
+            shapeFlag -= 256 /* COMPONENT_SHOULD_KEEP_ALIVE */;
+          }
+          cacheVnode.shapeFlag = shapeFlag;
+          unmount(cacheVnode, storageContainer);
+        }
+      }
       return () => {
         let vnode = slots.default();
         if (!(vnode.shapeFlag && 4 /* STATEFUL_COMPONENT */)) {
@@ -1225,6 +1244,10 @@ var vueRuntimeDom = (() => {
           vnode.shapeFlag |= 512 /* COMPONENT_KEPT_ALIVE */;
         } else {
           keys.add(key);
+          let { max } = props;
+          if (max && keys.size > max) {
+            pruneCache(keys.values().next().value);
+          }
         }
         return vnode;
       };
