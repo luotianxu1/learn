@@ -1,35 +1,70 @@
-<template>
-    {{ count }}
-    {{ double }}
-    <button @click="store.count++">增加</button>
-    <button @click="increment(5)">通过action修改</button>
-</template>
-
 <script setup>
-import { useMainStore } from './stores/main'
-import { storeToRefs } from 'pinia'
+import { useMainStore } from './stores/main.js'
+import { useUserStore } from './stores/user.js'
+const mainStore = useMainStore()
+const { increment } = mainStore
 
-const store = useMainStore()
-const { increment } = store
-const { count, double } = storeToRefs(store)
+const userStore = useUserStore()
+userStore.$subscribe((state) => {
+    // watch
+})
 
-function handleClick() {
-    // count.value++
-    store.increment(5)
-}
+mainStore.$onAction(({ after, onError }) => {
+    after((resolvedValue) => {
+        console.log(resolvedValue)
+    })
+    after((resolvedValue) => {
+        console.log(resolvedValue)
+    })
+    onError((error) => {})
+})
+// mainStore.$dispose()
 </script>
 
-<style scoped>
-.logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-}
-.logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-    filter: drop-shadow(0 0 2em #42b883aa);
+<template>
+    {{ mainStore.count }}
+    {{ mainStore.double }}
+    <button @click="mainStore.count++">增加</button>
+    <button
+        @click="
+            mainStore.$patch((state) => {
+                mainStore.count = state.count + 1
+                mainStore.count = state.count + 1
+                mainStore.count = state.count + 1
+                mainStore.count = state.count + 1
+            })
+        "
+    >
+        函数patch
+    </button>
+
+    <button
+        @click="
+            mainStore.$patch({
+                count: mainStore.count + 1,
+            })
+        "
+    >
+        对象patch
+    </button>
+
+    <button @click="increment(5)">通过action修改</button>
+    <button @click="mainStore.$reset()">重置store</button>
+    <button @click="mainStore.$state = { count: 0 }">$state修改</button>
+    <hr />
+
+    {{ userStore.age }} {{ userStore.doubleAge }}
+
+    <button @click="userStore.changeAge(5)">修改年龄</button>
+</template>
+
+<style>
+#app {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: center;
+    color: #2c3e50;
+    margin-top: 60px;
 }
 </style>

@@ -34,6 +34,7 @@ function merge(target, state) {
     return target
 }
 function createSetupStore(id, setup, pinia) {
+    console.log(id)
     let scope
     // 全局可以关比所有的store，让他停止,自己也有一个scope可以停止自己
     const setupStore = pinia._e.run(() => {
@@ -111,7 +112,6 @@ function createSetupStore(id, setup, pinia) {
         if ((isRef(v) || isReactive(v)) && !isReadonly(v)) {
             state[key] = v
         }
-        console.log(state)
         if (typeof v === 'function') {
             setupStore[key] = wrapAction(v)
         }

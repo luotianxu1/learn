@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore } from '../pinia'
 import { computed, reactive, toRefs } from 'vue'
 
 export const useUserStore = defineStore('user', () => {
