@@ -20,9 +20,55 @@ module.exports = {
         static: path.resolve(__dirname, 'public'),
         port: 8080,
         open: true,
+        onBeforeSetupMiddleware({ app }) {
+            app.get('/api/users', (req, res) => {
+                res.json({
+                    success: true,
+                    data: [
+                        { id: 1, name: 'zhufeng1' },
+                        { id: 2, name: 'zhufeng2' },
+                        { id: 3, name: 'zhufeng3' },
+                    ],
+                })
+            })
+        },
+        // proxy: {
+        //     target: 'http://localhost:3000',
+        // },
     },
     module: {
         rules: [
+            {
+                test: /\.js$/,
+                loader: 'eslint-loader',
+                enforce: 'pre', // 默认 pre前置  post 后置
+                options: { fix: true },
+                exclude: /node_modules/,
+            },
+            {
+                test: /\.js$/,
+                use: [
+                    {
+                        loader: 'babel-loader',
+                        options: {
+                            presets: [
+                                '@babel/preset-env',
+                                '@babel/preset-react',
+                            ],
+                            plugins: [
+                                [
+                                    '@babel/plugin-proposal-decorators',
+                                    { legacy: true },
+                                ],
+                                [
+                                    '@babel/plugin-proposal-class-properties',
+                                    { loose: true },
+                                ],
+                            ],
+                        },
+                    },
+                ],
+            },
             {
                 test: /\.css$/,
                 use: [
@@ -38,6 +84,8 @@ module.exports = {
                         },
                     }, // 会读取css文件，并且自动识别里面important的文件
                     'postcss-loader',
+                    path.resolve(__dirname, 'loaders/logger1.js'),
+                    path.resolve(__dirname, 'loaders/logger2.js'),
                 ],
             },
             {
@@ -55,6 +103,28 @@ module.exports = {
                     'css-loader',
                     'sass-loader', // 会读取源CSS文件，并且自动可以识别里面import语句并把对应CSS内容合并过来
                 ],
+            },
+            {
+                test: /\.png$/,
+                type: 'asset/resource', // 这是webpack5的新功能，file-loader
+            },
+            {
+                test: /\.ico$/,
+                type: 'asset/inline', // 这是webpack5的新功能，url-loader 把文件内容变成base64字符串返回
+            },
+            {
+                test: /\.txt$/,
+                type: 'asset/source', // 这是webpack5的新功能，raw-loader 读取文件的原始内容
+            },
+            {
+                test: /\.jpg$/,
+                type: 'asset', // 如果只写asset,不写/inline /resource 会自动根据文件大小进行选择处理
+                parser: {
+                    // 如果文件大于4K的话，就产出生成一个新的文件，并返回新的文件路径，如果小于4K的话返回内容的base64字符串
+                    dataUrlCondition: {
+                        maxSize: 4 * 1024,
+                    },
+                },
             },
         ],
     },
