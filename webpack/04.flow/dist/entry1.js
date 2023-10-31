@@ -1,1 +1,32 @@
-(()=>{var r={593:r=>{r.exports="title1"}},t={};function e(o){var n=t[o];if(void 0!==n)return n.exports;var s=t[o]={exports:{}};return r[o](s,s.exports,e),s.exports}(()=>{let r=e(593);console.log("entry1",r)})()})();
+
+      (() => {
+      var modules = ({
+        
+          "./src/title1.js":(module,exports,require)=>{
+            module.exports = 'title1';
+          }
+        ,
+          "./src/entry1.js":(module,exports,require)=>{
+            let title = require("./src/title1.js");
+console.log('entry1', title);
+          }
+        
+      });
+      var cache = {};
+      function require(moduleId) {
+        var cachedModule = cache[moduleId];
+        if (cachedModule !== undefined) {
+          return cachedModule.exports;
+        }
+        var module = cache[moduleId] = {
+          exports: {}
+        };
+        modules[moduleId](module, module.exports, require);
+        return module.exports;
+      }
+      var exports = {};
+      let title = require("./src/title1.js");
+console.log('entry1', title);
+      })()
+      ;
+    
