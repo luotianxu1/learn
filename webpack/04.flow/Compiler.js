@@ -3,6 +3,8 @@ const path = require('path')
 const fs = require('fs')
 const Compilation = require('./Compilation')
 
+const fileDependencySet = new Set()
+
 class Compiler {
     constructor(options) {
         this.options = options
@@ -26,7 +28,10 @@ class Compiler {
             })
             //会遍历依赖的文件，对这些文件进行监听，当这些文件发生变化后会重新开始一次新的编译
             ;[...fileDependencies].forEach((fileDependency) => {
-                fs.watch(fileDependency, () => this.compile(onCompiled))
+                if (!fileDependencySet.has(fileDependency)) {
+                    fs.watch(fileDependency, () => this.compile(onCompiled))
+                    fileDependencySet.add(fileDependency)
+                }
             })
             this.hooks.done.call()
         }
