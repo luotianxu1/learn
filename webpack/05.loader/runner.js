@@ -39,13 +39,32 @@ for (let i = 0; i < rules.length; i++) {
     }
 }
 let loaders = []
-loaders.push(...postLoaders, ...inlineLoaders, ...normalLoaders, ...preLoaders)
+//loader的执行顺序是在这定义，是在执行runLoaders之前就确定好的
+//noPrePostAutoLoaders	不要前后置和普通 loader,只要内联 loader
+if (request.startsWith('!!')) {
+    loaders.push(...inlineLoaders)
+    //noPreAutoLoaders	不要前置和普通 loader
+} else if (request.startsWith('-!')) {
+    loaders.push(...postLoaders, ...inlineLoaders)
+    //noAutoLoaders	不要普通 loader
+} else if (request.startsWith('!')) {
+    loaders.push(...postLoaders, ...inlineLoaders, ...preLoaders)
+} else {
+    //这里的前置 和后置是相对于normal来说的。
+    loaders.push(
+        ...postLoaders,
+        ...inlineLoaders,
+        ...normalLoaders,
+        ...preLoaders
+    )
+}
 loaders = loaders.map((loader) => path.resolve(__dirname, 'loaders', loader))
 
 runLoaders(
     {
         resource,
         loaders,
+        context: { age: 15 },
     },
     (err, result) => {
         console.log(result)
