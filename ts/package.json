@@ -1,0 +1,31 @@
+{
+    "name": "ts-project",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "rollup -c -w"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://gitee.com/jw-speed/2022jiagouke11-13-ts.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@rollup/plugin-node-resolve": "^15.0.1",
+        "@types/node": "^18.11.9",
+        "rollup": "^3.3.0",
+        "rollup-plugin-serve": "^2.0.1",
+        "rollup-plugin-typescript2": "^0.34.1",
+        "typescript": "^4.8.4"
+    },
+    "dependencies": {
+        "@types/lodash": "^4.14.190",
+        "@types/react": "^18.0.25",
+        "jquery": "^3.6.1",
+        "reflect-metadata": "^0.1.13"
+    }
+}
