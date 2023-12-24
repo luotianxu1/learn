@@ -2,7 +2,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware')
 
 module.exports = function (app) {
     // app.use(
-    //     createProxyMiddleware('jian', {
+    //     createProxyMiddleware('/jian', {
     //         target: '',
     //         changeOrigin: true,
     //         ws: true,
