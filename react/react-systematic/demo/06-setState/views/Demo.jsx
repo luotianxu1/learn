@@ -1,4 +1,5 @@
 import React from 'react'
+import { flushSync } from 'react-dom'
 
 class Demo extends React.Component {
     state = {
@@ -32,6 +33,19 @@ class Demo extends React.Component {
             })
             console.log(this.state)
         }, 1000)
+
+        flushSync(() => {
+            this.setState({
+                x: x + 1,
+            })
+            this.setState({
+                y: y + 1,
+            })
+        })
+
+        this.setState({
+            z: this.state.x + this.state.y,
+        })
     }
 
     render() {
