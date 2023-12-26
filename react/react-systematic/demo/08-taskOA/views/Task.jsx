@@ -24,7 +24,7 @@ const formatTime = function formatTime(time) {
     return `${zero(month)}-${zero(day)} ${zero(hours)}:${zero(minutes)}`
 }
 
-class Task extends React.Component {
+class Task extends React.PureComponent {
     // 定义表格列的数据
     columns = [
         {
@@ -66,17 +66,20 @@ class Task extends React.Component {
         {
             title: '操作',
             render: (_, record) => {
-                let { state } = record
+                let { id, state } = record
                 return (
                     <>
                         <Popconfirm
                             title='您确定要删除此任务吗？'
-                            onConfirm={() => {}}
+                            onConfirm={this.handleRemove.bind(null, id)}
                         >
                             <Button type='link'>删除</Button>
                         </Popconfirm>
                         {+state === 2 ? (
-                            <Popconfirm title='您确定要把此任务设置为完成吗？'>
+                            <Popconfirm
+                                title='您确定要把此任务设置为完成吗？'
+                                onConfirm={this.handleUpdate.bind(null, id)}
+                            >
                                 <Button type='link'>完成</Button>
                             </Popconfirm>
                         ) : null}
@@ -153,6 +156,10 @@ class Task extends React.Component {
             ],
         })
     }
+
+    handleRemove = () => {}
+
+    handleUpdate = () => {}
 
     componentDidMount() {
         this.queryData()
