@@ -1,9 +1,11 @@
-import Demo from './views/Demo'
+import Nav from './views/Nav'
+import Menu from './views/Menu'
 
 const App = function App() {
     return (
         <div className='home-box'>
-            <Demo x={10} y={20}></Demo>
+            <Nav></Nav>
+            <Menu></Menu>
         </div>
     )
 }
