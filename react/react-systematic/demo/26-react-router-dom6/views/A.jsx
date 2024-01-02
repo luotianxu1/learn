@@ -1,8 +1,6 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import styled from 'styled-components'
-import RouterView from '../router'
-import routes from '../router/aRouter'
 
 const DemoBox = styled.div`
     display: flex;
@@ -25,7 +23,8 @@ const A = function A(A) {
                 <Link to='/a/a3'>A3</Link>
             </div>
             <div className='view'>
-                <RouterView routes={routes}></RouterView>
+                {/* Outlet：路由容器，用来渲染二级（多级）路由匹配的内容 */}
+                <Outlet></Outlet>
             </div>
         </DemoBox>
     )

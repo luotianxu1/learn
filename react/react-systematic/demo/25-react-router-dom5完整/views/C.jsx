@@ -7,7 +7,7 @@ import {
 } from 'react-router-dom'
 import qs from 'qs'
 
-const C = function C(C) {
+const C = function C() {
     // 方案一
     // let history = useHistory()
     // let location = useLocation()
