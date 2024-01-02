@@ -1,6 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+
+// redux
+import { Provider } from 'react-redux'
+import store from './store'
+
 // REM
 import 'lib-flexible'
 
@@ -28,6 +33,8 @@ const root = ReactDOM.createRoot(document.getElementById('root'))
 
 root.render(
     <ConfigProvider locale={zhCN}>
-        <App></App>
+        <Provider store={store}>
+            <App></App>
+        </Provider>
     </ConfigProvider>
 )
