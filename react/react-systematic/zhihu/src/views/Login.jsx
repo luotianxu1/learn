@@ -1,7 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import NavBarAgain from '../components/NavBarAgain'
 import { Form, Input, Toast } from 'antd-mobile'
 import ButtonAgain from '../components/ButtonAgain'
+import api from '../api/index'
+import { connect } from 'react-redux'
+import action from '../store/action'
 
 // 自定义校验规则
 const validate = {
@@ -22,26 +25,81 @@ const validate = {
     },
 }
 
-const Login = function Login() {
+const Login = function Login(props) {
+    let { queryuseInfoAsync, navigate, usp } = props
+
     const [formIns] = Form.useForm()
     const [disabled, setDisabled] = useState(false)
     const [sendText, setSendText] = useState('发送验证码')
 
-    const submit = (values) => {}
+    const submit = async (values) => {
+        try {
+            await formIns.validateFields()
+            let { phone, code } = formIns.getFieldValue()
+            let { code: codeHttp, token } = await api.login(phone, code)
+            console.log(codeHttp, token)
+            if (+codeHttp !== 0) {
+                Toast.show({
+                    icon: 'fail',
+                    content: '登陆失败',
+                })
+                formIns.resetFields(['code'])
+                return
+            }
+            localStorage.setItem('token', token)
+            // 派发任务
+            queryuseInfoAsync()
+            Toast.show({
+                icon: 'success',
+                content: '登陆成功',
+            })
+            let to = usp.get('to')
+            to ? navigate(to, { replace: true }) : navigate(-1)
+        } catch (_) {}
+    }
 
-    const delay = (interval = 1000) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve()
-            }, interval)
-        })
+    // 发送验证码
+    let timer = null
+    let num = 31
+    const countDown = () => {
+        num--
+        if (num === 0) {
+            clearInterval(timer)
+            timer = null
+            setSendText('发送验证码')
+            setDisabled(false)
+            return
+        }
+        setSendText(`${num}秒后重发`)
     }
     const send = async () => {
         try {
             await formIns.validateFields(['phone'])
-            await delay(3000)
+            let phone = formIns.getFieldValue('phone')
+            console.log()
+            let { code } = api.phoneCode(phone)
+            if (+code) {
+                Toast.show({
+                    icon: 'fail',
+                    content: '发送失败',
+                })
+                return
+            }
+            setDisabled(true)
+            countDown()
+            if (!timer) {
+                timer = setInterval(countDown, 1000)
+            }
         } catch (_) {}
     }
+    useEffect(() => {
+        return () => {
+            if (timer) {
+                clearInterval(timer)
+                timer = null
+            }
+        }
+    }, [])
 
     return (
         <div className='login-box'>
@@ -92,4 +150,4 @@ const Login = function Login() {
     )
 }
 
-export default Login
+export default connect(null, action.base)(Login)
