@@ -1,11 +1,16 @@
 import React from 'react'
 import { NavBar } from 'antd-mobile'
 import PropTypes from 'prop-types'
+import './NavBarAgain.less'
 
 const NavBarAgain = function NavBarAgain(props) {
     let { title } = props
     const handleback = () => {}
-    return <NavBar onBack={handleback}>{title}</NavBar>
+    return (
+        <NavBar className='navbar-again-box' onBack={handleback}>
+            {title}
+        </NavBar>
+    )
 }
 
 NavBarAgain.defaultProps = {

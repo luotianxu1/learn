@@ -10,22 +10,22 @@ axios.defaults.transformRequest = (data) => {
 }
 axios.interceptors.request.use((config) => {
     // 针对于部分接口，我们携带令牌和签名信息
-    let apiList = [
-            '/check_login',
-            '/user_info',
-            '/user_update',
-            '/store',
-            '/store_remove',
-            '/store_list',
-        ],
-        token = localStorage.getItem('token')
-    if (apiList.includes(config.url.replace('/api', '')) && token) {
-        let time = +new Date(),
-            sign = md5(`${token}@${time}@zhufeng`)
-        config.headers['authorzation'] = token
-        config.headers['time'] = time
-        config.headers['sign'] = sign
-    }
+    // let apiList = [
+    //         '/check_login',
+    //         '/user_info',
+    //         '/user_update',
+    //         '/store',
+    //         '/store_remove',
+    //         '/store_list',
+    //     ],
+    //     token = localStorage.getItem('token')
+    // if (apiList.includes(config.url.replace('/api', '')) && token) {
+    //     let time = +new Date(),
+    //         sign = md5(`${token}@${time}@zhufeng`)
+    //     config.headers['authorzation'] = token
+    //     config.headers['time'] = time
+    //     config.headers['sign'] = sign
+    // }
     return config
 })
 axios.interceptors.response.use(

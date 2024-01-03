@@ -1,4 +1,4 @@
-news-item-box {
+.news-item-box {
     position: relative;
     box-sizing: border-box;
     padding: 10px 0;
@@ -7,6 +7,17 @@ news-item-box {
     a {
         display: block;
         width: 100%;
+
+        &:visited {
+            .content {
+                .title {
+                    color: #555;
+                }
+                .author {
+                    color: #aaa;
+                }
+            }
+        }
     }
 
     .adm-image {
