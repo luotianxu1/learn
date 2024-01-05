@@ -9,7 +9,6 @@ const baseAction = {
             let { code, data } = await api.userInfo()
             if (code === 0) {
                 info = data
-                console.log(info)
             }
         } catch (_) {}
         return {
