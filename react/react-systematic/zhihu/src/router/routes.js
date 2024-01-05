@@ -1,11 +1,12 @@
 import { lazy } from 'react'
 import Home from '../views/Home'
+import { withKeepAlive } from 'keepalive-react-component'
 
 const routes = [
     {
         path: '/',
         name: 'home',
-        component: Home,
+        component: withKeepAlive(Home, { cacheId: 'home', scroll: true }),
         meta: {
             title: '知乎日报-WebApp',
         },
@@ -13,7 +14,10 @@ const routes = [
     {
         path: '/detail/:id',
         name: 'detail',
-        component: lazy(() => import('../views/Detail')),
+        component: withKeepAlive(
+            lazy(() => import('../views/Detail')),
+            { cacheId: 'detail', scroll: true }
+        ),
         meta: {
             title: '新闻详情-知乎日报',
         },

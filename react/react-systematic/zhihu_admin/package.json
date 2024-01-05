@@ -18,7 +18,7 @@
         "request": "^2.88.2"
     },
     "config": {
-        "server": 7001,
+        "server": 7002,
         "secret": "ZFPX",
         "maxAge": "7d"
     }

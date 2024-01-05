@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react'
-import SkeletonAgain from '../components/SkeletonAgain'
+import React from 'react'
 import { connect } from 'react-redux'
 import action from '../store/action'
 
