@@ -1,8 +1,9 @@
 import React from 'react'
-import { connect } from 'react-redux'
+import { useSelector } from 'react-redux'
 
-const VoteMain = function VoteMain(props) {
-    let { supNum, oppNum } = props
+const VoteMain = function VoteMain() {
+    let { supNum, oppNum } = useSelector((state) => state.vote)
+
     return (
         <div className='main'>
             <p>支持人数:{supNum}人</p>
@@ -11,4 +12,4 @@ const VoteMain = function VoteMain(props) {
     )
 }
 
-export default connect((state) => state.vote)(VoteMain)
+export default VoteMain

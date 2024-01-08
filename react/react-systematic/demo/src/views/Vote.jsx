@@ -1,10 +1,10 @@
 import React from 'react'
 import VoteMain from './VoteMain'
 import VoteFooter from './VoteFooter'
-import { connect } from 'react-redux'
+import { useSelector } from 'react-redux'
 
-const Vote = function Vote(props) {
-    let { supNum, oppNum } = props
+const Vote = function Vote() {
+    let { supNum, oppNum } = useSelector((state) => state.vote)
     return (
         <div className='vote-box'>
             <div className='header'>
@@ -17,6 +17,4 @@ const Vote = function Vote(props) {
     )
 }
 
-export default connect((state) => {
-    return state.vote
-})(Vote)
+export default Vote
