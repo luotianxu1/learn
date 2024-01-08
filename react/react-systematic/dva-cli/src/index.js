@@ -1,4 +1,5 @@
 import dva from "dva";
+import "@babel/polyfill";
 
 // 1. Initialize
 const app = dva();
