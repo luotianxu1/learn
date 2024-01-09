@@ -1,10 +1,11 @@
 import React from "react";
 import { Button } from "antd";
+import { connect } from "dva";
 
-const Demo = function Demo() {
+const Demo = function Demo({ num, dispatch }) {
   return (
     <div>
-      <span>0</span>
+      <span>{num}</span>
       <Button type="primary">按钮</Button>
       <Button type="primary" danger>
         异步按钮
@@ -13,4 +14,4 @@ const Demo = function Demo() {
   );
 };
 
-export default Demo;
+export default connect((state) => state.demo)(Demo);
