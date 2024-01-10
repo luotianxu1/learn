@@ -2,7 +2,8 @@ import React from "react";
 import { Button } from "antd";
 import { connect } from "dva";
 
-const Demo = function Demo({ num, dispatch }) {
+const Demo = function Demo({ num, loading, dispatch }) {
+  loading = loading.effects["demo/incrementAsync"]; // 获取loading状态
   return (
     <div>
       <span>{num}</span>
@@ -17,6 +18,7 @@ const Demo = function Demo({ num, dispatch }) {
       <Button
         type="primary"
         danger
+        loading={loading}
         onClick={() => {
           dispatch({ type: "demo/incrementAsync", payload: 10 });
         }}
@@ -27,4 +29,6 @@ const Demo = function Demo({ num, dispatch }) {
   );
 };
 
-export default connect((state) => state.demo)(Demo);
+export default connect((state) => {
+  return { ...state.demo, loading: state.loading };
+})(Demo);

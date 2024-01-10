@@ -41,20 +41,20 @@ export default {
      *      yield select(state => state.demo) 这样就是获取指定的状态信息
      */
 
-    // *incrementAsync({ payload }, { call, put }) {
-    //   try {
-    //     yield call(delay, 2000);
-    //     yield put({ type: "increment", payload });
-    //   } catch (_) {}
-    // },
-    // 如果向设置不同的监听器
-    incrementAsync: [
-      function* ({ payload }, { call, put }) {
+    *incrementAsync({ payload }, { call, put }) {
+      try {
         yield call(delay, 2000);
         yield put({ type: "increment", payload });
-      },
-      { type: "takeLatest" },
-    ],
+      } catch (_) {}
+    },
+    // 如果向设置不同的监听器
+    // incrementAsync: [
+    //   function* ({ payload }, { call, put }) {
+    //     yield call(delay, 2000);
+    //     yield put({ type: "increment", payload });
+    //   },
+    //   { type: "takeLatest" },
+    // ],
   },
   // 在这里订阅的方法，会在页面已加载就会被通知执行
   /**

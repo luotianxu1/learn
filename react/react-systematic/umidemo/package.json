@@ -1,0 +1,23 @@
+{
+    "private": true,
+    "author": "罗天旭 <1265062404@qq.com>",
+    "scripts": {
+        "dev": "umi dev",
+        "build": "umi build",
+        "postinstall": "umi setup",
+        "setup": "umi setup",
+        "start": "npm run dev"
+    },
+    "dependencies": {
+        "antd": "5.1.2",
+        "qs": "6.11.0",
+        "styled-components": "5.3.6",
+        "umi": "^4.1.0"
+    },
+    "devDependencies": {
+        "@types/react": "^18.2.47",
+        "@types/react-dom": "^18.2.18",
+        "@umijs/plugins": "4.0.41",
+        "typescript": "^5.3.3"
+    }
+}

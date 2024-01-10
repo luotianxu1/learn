@@ -2,6 +2,8 @@ import dva from "dva";
 import "@babel/polyfill";
 import createHistory from "history/createHashHistory";
 import voteModel from "./models/vote";
+import createLoading from "dva-loading";
+import createLogger from "redux-logger";
 
 // 1. Initialize
 const app = dva({
@@ -9,6 +11,7 @@ const app = dva({
   history: createHistory(),
   // 扩展其他的中间件 例如redux-logger/redux-persist
   extraEnhancers: [],
+  onAction: [createLogger()],
   initialState: {
     // demo: {
     //   num: 100,
@@ -18,7 +21,7 @@ const app = dva({
 window.app = app;
 
 // 2. Plugins
-// app.use({});
+app.use(createLoading());
 
 // 3. Model
 app.model(voteModel);
