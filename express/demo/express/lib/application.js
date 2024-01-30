@@ -1,13 +1,26 @@
 const http = require('http')
 const Router = require('./router')
+const methods = require('methods')
 
-function Applicaion() {
-    this._router = new Router()
+function Applicaion() {}
+
+Applicaion.prototype.lazy_route = function () {
+    if (!this._router) {
+        this._router = new Router()
+    }
 }
 
-Applicaion.prototype.get = function (path, handler) {
-    this._router.get(path, handler)
+Applicaion.prototype.use = function (path, handler) {
+    this.lazy_route()
+    this._router.use(path, handler)
 }
+
+methods.forEach((method) => {
+    Applicaion.prototype[method] = function (path, ...handlers) {
+        this.lazy_route()
+        this._router[method](path, handlers)
+    }
+})
 
 Applicaion.prototype.listen = function () {
     let server = http.createServer((req, res) => {
@@ -15,6 +28,7 @@ Applicaion.prototype.listen = function () {
         function done() {
             res.end(`Connot ${req.method} ${req.url}`)
         }
+        this.lazy_route()
         this._router.handle(req, res, done)
     })
     server.listen(...arguments)
