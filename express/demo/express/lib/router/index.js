@@ -37,24 +37,34 @@ Router.prototype.handle = function (req, res, out) {
     let { pathname } = url.parse(req.url)
     // express  需要通过next函数来迭代
     let idx = 0
-    let dispatch = () => {
+    let dispatch = (err) => {
         if (idx === this.stack.length) return out()
         let layer = this.stack[idx++]
 
-        // layer有可能是中间件，还有可能是方法
-        if (layer.match(pathname)) {
-            // 如果是中间件，直接执行对应的方法
+        // 用户传入了错误属性
+        if (err) {
+            // 2种可能 1 错误中间件 2 普通中间件
             if (!layer.route) {
-                layer.handle_request(req, res, dispatch)
+                layer.handle_error(err, req, res, dispatch)
             } else {
-                if (layer.route.methods[req.method.toLowerCase()]) {
-                    layer.handle_request(req, res, dispatch)
-                } else {
-                    dispatch()
-                }
+                dispatch(err) // 是路由直接忽略
             }
         } else {
-            dispatch()
+            // layer有可能是中间件，还有可能是方法
+            if (layer.match(pathname)) {
+                // 如果是中间件，直接执行对应的方法
+                if (!layer.route && layer.handler.length !== 4) {
+                    layer.handle_request(req, res, dispatch)
+                } else {
+                    if (layer.route.methods[req.method.toLowerCase()]) {
+                        layer.handle_request(req, res, dispatch)
+                    } else {
+                        dispatch()
+                    }
+                }
+            } else {
+                dispatch()
+            }
         }
     }
     dispatch()

@@ -11,7 +11,8 @@ function Route() {
 Route.prototype.dispatch = function (req, res, out) {
     let idx = 0
     let method = req.method.toLowerCase()
-    let dispatch = () => {
+    let dispatch = (err) => {
+        if (err) return out(err)
         if (idx === this.stack.length) return out()
         let layer = this.stack[idx++]
         if (layer.method === method) {

@@ -17,7 +17,15 @@ Layer.prototype.match = function (pathname) {
         return pathname.startsWith(this.path + '/')
     }
 }
-
+Layer.prototype.handle_error = function (err, req, res, next) {
+    //  如果参数的个数是4个，说明找到了错误处理中间件
+    if (this.handler.length === 4) {
+        return this.handler(err, req, res, next)
+    } else {
+        // 如果没找到继续向下找
+        next(err)
+    }
+}
 Layer.prototype.handle_request = function (req, res, next) {
     this.handler(req, res, next)
 }
