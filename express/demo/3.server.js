@@ -32,4 +32,4 @@ app.use('/', function (req, res, next) {
     res.end(req.a + '')
 })
 
-app.listen(3000)
+app.listen(3002)
