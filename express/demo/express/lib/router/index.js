@@ -57,6 +57,7 @@ Router.prototype.handle = function (req, res, out) {
                     layer.handle_request(req, res, dispatch)
                 } else {
                     if (layer.route.methods[req.method.toLowerCase()]) {
+                        req.params = layer.params
                         layer.handle_request(req, res, dispatch)
                     } else {
                         dispatch()
