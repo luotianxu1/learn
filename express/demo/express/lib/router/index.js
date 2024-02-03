@@ -11,10 +11,19 @@ function Router() {
     }
     router.stack = []
     router.__proto__ = proto
+    router.paramsCallback = {}
     return router
 }
 
 let proto = {}
+proto.param = function (key, handler) {
+    if (this.paramsCallback[key]) {
+        this.paramsCallback[key].push(handler)
+    } else {
+        this.paramsCallback[key] = [handler]
+    }
+}
+
 proto.route = function (path) {
     let route = new Route()
     let layer = new Layer(path, route.dispatch.bind(route)) // 给当前调用get方法 放入一层
@@ -41,6 +50,33 @@ methods.forEach((method) => {
     }
 })
 
+proto.process_params = function (layer, req, res, done) {
+    // 当没有匹配超级key的时候
+    if (!layer.keys || layer.keys.length === 0) {
+        return done()
+    }
+    let keys = layer.keys.map((item) => item.name)
+    let params = this.paramsCallback
+    let idx = 0
+    function next() {
+        if (keys.length === idx) return done()
+        let key = keys[idx++]
+        processCallback(key, next)
+    }
+    next()
+    function processCallback(key, out) {
+        let fns = params[key]
+        let idx = 0
+        let value = req.params[key]
+        function next() {
+            if (fns.length === idx) return out()
+            let fn = fns[idx++]
+            fn(req, res, next, value, key)
+        }
+        next()
+    }
+}
+
 proto.handle = function (req, res, out) {
     let { pathname } = url.parse(req.url)
     // express  需要通过next函数来迭代
@@ -50,6 +86,7 @@ proto.handle = function (req, res, out) {
         if (idx === this.stack.length) return out()
         if (removed) {
             req.url = removed + req.url
+            removed = ''
         }
         let layer = this.stack[idx++]
         // 用户传入了错误属性
@@ -74,6 +111,10 @@ proto.handle = function (req, res, out) {
                 } else {
                     if (layer.route.methods[req.method.toLowerCase()]) {
                         req.params = layer.params
+                        // 将订阅好的事件去执行下
+                        this.process_params(layer, req, res, () => {
+                            layer.handle_request(req, res, dispatch)
+                        })
                         layer.handle_request(req, res, dispatch)
                     } else {
                         dispatch()
