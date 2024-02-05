@@ -6,17 +6,28 @@ import {
   Query,
   Body,
   Param,
+  UseFilters,
+  ForbiddenException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
+import { UseGuards } from '@nestjs/common';
+import { LoginMiddleware } from 'src/login.middleware';
+import { HttpExceptionFilter } from 'src/http-exception.filter';
+import { DataInterceptor } from 'src/data/data.interceptor';
 
 @Controller('user')
+@UseGuards(LoginMiddleware)
 export class UserController {
   constructor(private userService: UserService) {}
 
   // 通过数据库查询用户list
   @Get('list')
+  @UseFilters(HttpExceptionFilter)
+  @UseInterceptors(DataInterceptor)
   getList(): Promise<User[]> {
+    // throw new ForbiddenException('');
     return this.userService.getList();
   }
 
