@@ -9,6 +9,7 @@ import {
   UseFilters,
   ForbiddenException,
   UseInterceptors,
+  SetMetadata,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
@@ -16,6 +17,7 @@ import { UseGuards } from '@nestjs/common';
 import { LoginMiddleware } from 'src/login.middleware';
 import { HttpExceptionFilter } from 'src/http-exception.filter';
 import { DataInterceptor } from 'src/data/data.interceptor';
+import { ApiTags, ApiParam } from '@nestjs/swagger';
 
 @Controller('user')
 @UseGuards(LoginMiddleware)
@@ -24,6 +26,7 @@ export class UserController {
 
   // 通过数据库查询用户list
   @Get('list')
+  @SetMetadata('role', ['admin'])
   @UseFilters(HttpExceptionFilter)
   @UseInterceptors(DataInterceptor)
   getList(): Promise<User[]> {
@@ -31,7 +34,10 @@ export class UserController {
     return this.userService.getList();
   }
 
+  @ApiTags('分页查询')
   @Get('pageList')
+  @ApiParam({ name: 'page', type: String, description: '页数' })
+  @ApiParam({ name: 'pagesize', type: String, description: '数量' })
   async findAll(
     @Query('page') page: number,
     @Query('pagesize') pageSize: number,
