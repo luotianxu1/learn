@@ -1,5 +1,10 @@
 {
   "src": [
-    "pages/Index"
+    "pages/Index",
+    "pages/layout/linearLayout",
+    "pages/layout/stackLayout",
+    "pages/layout/flexLayout",
+    "pages/layout/relativeLayout",
+    "pages/layout/gridLayout"
   ]
 }
