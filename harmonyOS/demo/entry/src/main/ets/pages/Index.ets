@@ -25,8 +25,41 @@ struct Index {
         },
         {
           name: '栅格布局',
+          url: 'pages/layout/gridRowLayout'
+        },
+        {
+          name: '媒体查询',
+          url: 'pages/layout/mediaQueryExample'
+        },
+        {
+          name: '列表',
+          url: 'pages/layout/list'
+        },
+        {
+          name: '列表通讯录',
+          url: 'pages/layout/listDemo'
+        },
+        {
+          name: '网格布局',
           url: 'pages/layout/gridLayout'
+        },
+        {
+          name: '轮播',
+          url: 'pages/layout/swiper'
         }
+      ]
+    },
+    {
+      name: '组件',
+      children:[
+        {
+          name: '按钮',
+          url: 'pages/module/button'
+        },
+        {
+          name: '单选框',
+          url: 'pages/module/radio'
+        },
       ]
     }
   ]

@@ -5,6 +5,13 @@
     "pages/layout/stackLayout",
     "pages/layout/flexLayout",
     "pages/layout/relativeLayout",
-    "pages/layout/gridLayout"
+    "pages/layout/gridRowLayout",
+    "pages/layout/mediaQueryExample",
+    "pages/layout/list",
+    "pages/layout/listDemo",
+    "pages/layout/gridLayout",
+    "pages/layout/swiper",
+    "pages/module/button",
+    "pages/module/radio"
   ]
 }
