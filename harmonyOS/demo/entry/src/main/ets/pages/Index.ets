@@ -133,6 +133,15 @@ struct Index {
           url: 'pages/animate/pageTransitionSrc'
         },
       ]
+    },
+    {
+      name: '案例',
+      children:[
+        {
+          name: '二级联动',
+          url: 'pages/demo/secondLevelLink/page/index'
+        },
+      ]
     }
   ]
 

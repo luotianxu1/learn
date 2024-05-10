@@ -29,6 +29,7 @@
     "pages/animate/pageChange",
     "pages/animate/layoutChangeB",
     "pages/animate/pageTransitionSrc",
-    "pages/animate/PageTransitionDst2"
+    "pages/animate/PageTransitionDst2",
+    "pages/demo/secondLevelLink/page/index"
   ]
 }
