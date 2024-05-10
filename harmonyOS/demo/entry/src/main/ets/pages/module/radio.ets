@@ -2,19 +2,25 @@
 @Component
 struct RadioModule {
   build() {
-    Column() {
-      Radio({ value: 'Radio1', group: 'radioGroup' })
-        .onChange((isChecked: boolean) => {
-          if (isChecked) {
-            //需要执行的操作
-          }
-        })
-      Radio({ value: 'Radio2', group: 'radioGroup' })
-        .onChange((isChecked: boolean) => {
-          if (isChecked) {
-            //需要执行的操作
-          }
-        })
+    Row() {
+      Row(){
+        Radio({ value: 'Radio1', group: 'radioGroup' })
+          .onChange((isChecked: boolean) => {
+            if (isChecked) {
+              //需要执行的操作
+            }
+          })
+        Text('Radio1')
+      }
+      Row(){
+        Radio({ value: 'Radio2', group: 'radioGroup' })
+          .onChange((isChecked: boolean) => {
+            if (isChecked) {
+              //需要执行的操作
+            }
+          })
+        Text('Radio2')
+      }
     }
     .padding(10)
   }

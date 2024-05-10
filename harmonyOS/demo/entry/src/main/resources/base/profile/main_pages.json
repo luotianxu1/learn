@@ -12,6 +12,23 @@
     "pages/layout/gridLayout",
     "pages/layout/swiper",
     "pages/module/button",
-    "pages/module/radio"
+    "pages/module/radio",
+    "pages/module/toggle",
+    "pages/module/progress",
+    "pages/module/text",
+    "pages/module/textInput",
+    "pages/module/customDialog",
+    "pages/module/popup",
+    "pages/module/menu",
+    "pages/router/routerA",
+    "pages/router/routerB",
+    "pages/router/tab",
+    "pages/graph/shape",
+    "pages/graph/canvas",
+    "pages/animate/layoutChange",
+    "pages/animate/pageChange",
+    "pages/animate/layoutChangeB",
+    "pages/animate/pageTransitionSrc",
+    "pages/animate/PageTransitionDst2"
   ]
 }
