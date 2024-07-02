@@ -14,7 +14,7 @@ class VoteMain extends React.Component {
         )
     }
 
-    componentDidMount() {
+    componentDidMount() { 
         const { store } = this.context
         store.subscribe(() => {
             this.forceUpdate()

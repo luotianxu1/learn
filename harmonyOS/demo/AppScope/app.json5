@@ -1,10 +1,10 @@
 {
   "app": {
-    "bundleName": "com.example.demo",
-    "vendor": "example",
-    "versionCode": 1000000,
-    "versionName": "1.0.0",
-    "icon": "$media:app_icon",
-    "label": "$string:app_name"
+    "bundleName": "com.example.demo", // 包名,不可省略
+    "vendor": "example", // 应用开发厂商描述,不可省略
+    "versionCode": 1000000, // 版本号,数值越大版本越高
+    "versionName": "1.0.0", // 给用户看的版本号
+    "icon": "$media:app_icon", // 应用图标
+    "label": "$string:app_name" // 应用名
   }
 }

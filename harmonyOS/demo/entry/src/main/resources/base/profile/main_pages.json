@@ -30,6 +30,7 @@
     "pages/animate/layoutChangeB",
     "pages/animate/pageTransitionSrc",
     "pages/animate/PageTransitionDst2",
+    "pages/notification/index",
     "pages/demo/secondLevelLink/page/index"
   ]
 }

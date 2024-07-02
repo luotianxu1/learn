@@ -135,6 +135,15 @@ struct Index {
       ]
     },
     {
+      name: '通知',
+      children:[
+        {
+          name: '通知',
+          url: 'pages/notification/index'
+        },
+      ]
+    },
+    {
       name: '案例',
       children:[
         {

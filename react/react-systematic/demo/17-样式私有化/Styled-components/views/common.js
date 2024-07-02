@@ -5,7 +5,7 @@ export const colorBlue = '#1677ff'
 export const titleSize = '18px'
 
 export const CommonListBox = styled.ul`
-    box0sizing: border-box;
+    box-sizing: border-box;
     padding: 10px;
     border: 1px solid #999;
 
